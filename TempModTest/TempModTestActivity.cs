@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -252,6 +253,38 @@ namespace TempModTest
             //scrollView.SmoothScrollTo(0, dumpTextView.Bottom);
             tvLatest.Text = message;
             Log.Info(TAG, message);
+
+            try
+            {
+                Context context = Application.Context;
+                Java.IO.File[] dirs = context.GetExternalFilesDirs(null);
+                string sdCardPath = null;
+                foreach(Java.IO.File folder in dirs)
+                {
+                    bool isRemovable = Android.OS.Environment.InvokeIsExternalStorageRemovable(folder);
+                    bool isEmulated = Android.OS.Environment.InvokeIsExternalStorageEmulated(folder);
+
+                    if (isRemovable && !isEmulated)
+                    {
+                        sdCardPath = folder.Path.Split("/Android")[0];
+                        break;
+                    }
+                }
+                if (sdCardPath != null)
+                {
+                    var filePath = System.IO.Path.Combine(sdCardPath, "Temperature.csv");
+                    if (Directory.Exists(sdCardPath))
+                    {
+                        var fs = new FileStream(filePath, FileMode.Append);
+                        byte[] txt = new UTF8Encoding(true).GetBytes(message);
+                        fs.Write(txt, 0, txt.Length);
+                        fs.Close();
+                    }
+                }
+            } catch
+            {
+
+            }
         }
 
         double adjustTemp(double InValue, double TA)
