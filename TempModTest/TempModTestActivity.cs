@@ -35,6 +35,7 @@ namespace TempModTest
         TextView titleTextView;
         TextView dumpTextView;
         ScrollView scrollView;
+        TextView tvLatest;
 
         Button btnStart;
         Button btnStop;
@@ -42,6 +43,7 @@ namespace TempModTest
 
         SerialInputOutputManager serialIoManager;
         private System.Timers.Timer timer = null;
+        int messageCount = 0;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -61,6 +63,7 @@ namespace TempModTest
             titleTextView = FindViewById<TextView>(Resource.Id.demoTitle);
             dumpTextView = FindViewById<TextView>(Resource.Id.consoleText);
             scrollView = FindViewById<ScrollView>(Resource.Id.demoScroller);
+            tvLatest = FindViewById<TextView>(Resource.Id.tvLatest);
 
             btnStart = FindViewById<Button>(Resource.Id.start);
             btnStop = FindViewById<Button>(Resource.Id.stop);
@@ -138,7 +141,7 @@ namespace TempModTest
             titleTextView.Text = "Serial device: " + port.GetType().Name;
 
             serialIoManager = new SerialInputOutputManager(port)
-            {                
+            {
                 BaudRate = 57600,
                 DataBits = 8,
                 StopBits = StopBits.One,
@@ -155,7 +158,7 @@ namespace TempModTest
                     StartActivity(intent);
                 });
             };
-            
+
             Log.Info(TAG, "Starting IO manager ..");
             try
             {
@@ -181,31 +184,36 @@ namespace TempModTest
 
         void UpdateReceivedData(byte[] data)
         {
-            if (data.Length != 64)
+            if (data.Length < 2)
             {
                 writeIndex = 0;
                 return;
             }
-            if (data[0] != 0xAA && data[0] != 0xAB)
+            int readFrom = 0;
+            while (readFrom < data.Length)
             {
-                writeIndex = 0;
-                return;
+                if (data[readFrom] != 0xAA && data[readFrom] != 0xAB)
+                {
+                    writeIndex = 0;
+                    return;
+                }
+                int length = data[readFrom + 1];
+                if (length > 62 || writeIndex + length > frame.Length)
+                {
+                    writeIndex = 0;
+                    return;
+                }
+
+                Buffer.BlockCopy(data, readFrom + 2, frame, writeIndex, length);
+                if (data[readFrom] == 0xAA)
+                {
+                    writeIndex = 0;
+                    processFrame();
+                }
+                else
+                    writeIndex += length;
+                readFrom += 64;
             }
-            int length = data[1];
-            if (length > 62 || writeIndex + length > frame.Length)
-            {
-                writeIndex = 0;
-                return;
-            }
-            
-            Buffer.BlockCopy(data, 2, frame, writeIndex, length);
-            if (data[0] == 0xAA)
-            {
-                writeIndex = 0;
-                processFrame();
-            }
-            else
-                writeIndex += length;
             return;
 
         }
@@ -220,11 +228,11 @@ namespace TempModTest
             int ambient = frame[9] * 256 + frame[10];
             int startLine = 13 + 2 * 16 * 5; //skip 5 lines
             int maxCenter = 0;
-            for (int j = 0; j < 6; j++, startLine += 2*16)
+            for (int j = 0; j < 6; j++, startLine += 2 * 16)
             {
-                for (int i = 0, index = startLine + 2*5; i < 6; i++, index += 2)
+                for (int i = 0, index = startLine + 2 * 5; i < 6; i++, index += 2)
                 {
-                    int data = frame[index]*256 + frame[index + 1];
+                    int data = frame[index] * 256 + frame[index + 1];
                     if (data > maxCenter)
                         maxCenter = data;
                 }
@@ -233,10 +241,17 @@ namespace TempModTest
             double maxCenterTemp = data2Temp(maxCenter);
             double adjustedTemp = adjustTemp(maxCenterTemp, ambientTemp);
 
-            string message = String.Format("{0:0.##}, {1:0.##}, {2:0.##}\n", ambientTemp, maxCenterTemp, adjustedTemp);
+            string message = String.Format("{0:0.00}, {1:0.00}, {2:0.00}\n", ambientTemp, maxCenterTemp, adjustedTemp);
+            messageCount++;
+            if (messageCount == 200)
+            {
+                messageCount = 0;
+                dumpTextView.Text = "";
+            }
             dumpTextView.Append(message);
-            scrollView.SmoothScrollTo(0, dumpTextView.Bottom);
-            //Log.Info(TAG, message);
+            //scrollView.SmoothScrollTo(0, dumpTextView.Bottom);
+            tvLatest.Text = message;
+            Log.Info(TAG, message);
         }
 
         double adjustTemp(double InValue, double TA)

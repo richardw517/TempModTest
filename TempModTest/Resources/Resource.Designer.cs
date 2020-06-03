@@ -86,6 +86,9 @@ namespace TempModTest
 			// aapt resource value: 0x7f060004
 			public const int deviceList = 2131099652;
 			
+			// aapt resource value: 0x7f06000f
+			public const int linearLayout1 = 2131099663;
+			
 			// aapt resource value: 0x7f060002
 			public const int progressBar = 2131099650;
 			
@@ -106,6 +109,9 @@ namespace TempModTest
 			
 			// aapt resource value: 0x7f060008
 			public const int temperature = 2131099656;
+			
+			// aapt resource value: 0x7f060010
+			public const int tvLatest = 2131099664;
 			
 			static Id()
 			{

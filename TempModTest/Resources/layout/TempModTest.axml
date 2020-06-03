@@ -37,16 +37,34 @@
 		android:layout_below="@+id/clear"
 		android:layout_height="1dip"
 		android:background="#eeeeee" />
-	<ScrollView
-		android:id="@+id/demoScroller"
+
+	<LinearLayout
+		android:orientation="horizontal"
+		android:minWidth="25px"
+		android:minHeight="25px"
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:layout_below="@+id/separator">
+		android:layout_height="match_parent"
+		android:layout_below="@id/separator"
+		android:id="@+id/linearLayout1" >
+		<ScrollView
+			android:id="@+id/demoScroller"
+			android:layout_width="wrap_content"
+			android:layout_height="match_parent">
+			<TextView
+				android:id="@+id/consoleText"
+				android:textIsSelectable="true"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:gravity="bottom"
+				android:typeface="monospace" />
+		</ScrollView>
 		<TextView
-			android:id="@+id/consoleText"
-			android:textIsSelectable="true"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:typeface="monospace" />
-	</ScrollView>
+				android:id="@+id/tvLatest"
+				android:textIsSelectable="true"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:gravity="center"
+				android:textSize="80sp"
+				android:typeface="monospace" />
+	</LinearLayout>
 </RelativeLayout>
