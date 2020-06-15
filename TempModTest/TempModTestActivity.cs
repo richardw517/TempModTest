@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-
+using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
@@ -86,6 +86,8 @@ namespace TempModTest
             };
         }
 
+        byte[] init0data = new byte[] { 0xAC, 0xD0, 0x2F, 0x04, 0x00 };
+        byte[] initdata = new byte[] { 0xAD, 0x00, 0x02, 0xD0, 0xB0, 0x10 };
         byte[] getdata = new byte[] { 0xad, 0x02, 0x0d, 0xd0, 0x4e };
 
         private void OnTimerEvent(object sender, System.Timers.ElapsedEventArgs e)
@@ -164,6 +166,10 @@ namespace TempModTest
             try
             {
                 serialIoManager.Open(usbManager);
+                WriteData(init0data);
+                await Task.Delay(200);
+                WriteData(initdata);
+                await Task.Delay(200);
             }
             catch (Java.IO.IOException e)
             {
@@ -208,8 +214,9 @@ namespace TempModTest
                 Buffer.BlockCopy(data, readFrom + 2, frame, writeIndex, length);
                 if (data[readFrom] == 0xAA)
                 {
+                    if (writeIndex + length > 64)
+                        processFrame();
                     writeIndex = 0;
-                    processFrame();
                 }
                 else
                     writeIndex += length;
@@ -242,7 +249,7 @@ namespace TempModTest
             double maxCenterTemp = data2Temp(maxCenter);
             double adjustedTemp = adjustTemp(maxCenterTemp, ambientTemp);
 
-            string message = String.Format("{0:0.00}, {1:0.00}, {2:0.00}\n", ambientTemp, maxCenterTemp, adjustedTemp);
+            string message = String.Format("{0:0.00}, {1:0.00}, {2:0.00}, {3:HH:mm:ss tt}\n", ambientTemp, maxCenterTemp, adjustedTemp, DateTime.Now);
             messageCount++;
             if (messageCount == 200)
             {
@@ -462,5 +469,487 @@ namespace TempModTest
 
             return 0;
         }
+
+        //double adjustTemp(double InValue, double TA)
+        //{
+
+        //    double tmp0 = 0;
+        //    double tmp1 = 0;
+
+        //    if ((TA >= 27.0) && (TA < 34.0))
+        //    {
+        //        do
+        //        {
+
+        //            if ((InValue >= 38.5) && (InValue < 39.5))
+        //            {
+        //                tmp0 = (200.0 / 256.0) * InValue + 6.05;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 37.5) && (InValue < 38.5))
+        //            {
+        //                tmp0 = (40.0 / 256.0) * InValue + 30.66;
+        //                break;
+        //            }
+
+        //            if ((InValue < 37.5) && (InValue >= 36.5))
+        //            {
+        //                tmp0 = (58.0 / 256.0) * InValue + 28.2;
+        //                break;
+        //            }
+
+        //            if ((InValue < 36.5) && (InValue >= 35.5))
+        //            {
+        //                tmp0 = (35.0 / 256.0) * InValue + 31.55;
+        //                break;
+        //            }
+
+        //            if ((InValue < 35.5) && (InValue >= 34.5))
+        //            {
+        //                tmp0 = (39 / 256.0) * InValue + 31.55;
+        //                break;
+        //            }
+        //            if ((InValue < 36.5) && (InValue >= 35.5))
+        //            {
+        //                tmp0 = (35.0 / 256.0) * InValue + 31.55;
+        //                break;
+        //            }
+
+        //            if (InValue < 32.5)
+        //            {
+        //                tmp0 = (80.0 / 256.0) * InValue + 26.61;
+        //                break;
+        //            }
+
+        //            if (InValue >= 39.5)
+        //            {
+        //                tmp0 = (40.0 / 256.0) * InValue + 31.39;
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0;
+        //    }
+
+        //    if (TA >= 34)
+        //    {
+        //        do
+        //        {
+
+        //            if (InValue >= 41.5)
+        //            {
+        //                tmp0 = (220.0 / 256.0) * InValue + 0.5;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 40.5) && (InValue < 41.5))
+        //            {
+        //                tmp0 = (60.0 / 256.0) * InValue + 26.88;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 39.5) && (InValue < 40.5))
+        //            {
+        //                tmp0 = (56.0 / 256.0) * InValue + 27.8;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 38.5) && (InValue < 39.5))
+        //            {
+        //                tmp0 = (38.0 / 256.0) * InValue + 30.56;
+        //                break;
+        //            }
+        //            if ((InValue >= 37.5) && (InValue < 38.5))
+        //            {
+        //                tmp0 = (70.0 / 256.0) * InValue + 25.98;
+        //                break;
+        //            }
+
+        //            if (InValue < 37.5)
+        //            {
+        //                tmp0 = (70.0 / 256.0) * InValue + 26.78;
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0;
+        //    }
+
+        //    if ((TA < 27) && (TA >= 19))
+        //    {
+        //        do
+        //        {
+
+        //            if (InValue < 31.5)
+        //            {
+        //                tmp0 = (80.0 / 256.0) * InValue + 26.71;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 31.5) && (InValue < 32.5))
+        //            {
+        //                tmp0 = (58.0 / 256.0) * InValue + 29.1;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 32.5) && (InValue < 34.5))
+        //            {
+        //                tmp0 = (61.0 / 256.0) * InValue + 28.5;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 34.5) && (InValue < 36.5))
+        //            {
+        //                tmp0 = (90.0 / 256.0) * InValue + 24.37;
+        //                break;
+        //            }
+        //            if (InValue >= 36.5)
+        //            {
+        //                tmp0 = (245.0 / 256.0) * InValue + 2.35;
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0;
+        //    }
+
+        //    if ((TA < 19) && (TA >= 10))
+        //    {
+        //        do
+        //        {
+
+        //            if (InValue < 31.5)
+        //            {
+        //                tmp0 = (80.0 / 256.0) * InValue + 6.58;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 31.5) && (InValue < 32.5))
+        //            {
+        //                tmp0 = (58.0 / 256.0) * InValue + 29.03;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 32.5) && (InValue < 34.5))
+        //            {
+        //                tmp0 = (51.0 / 256.0) * InValue + 28.45;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 34.5) && (InValue < 35.5))
+        //            {
+        //                tmp0 = (190.0 / 256.0) * InValue + 10.99;
+        //                break;
+        //            }
+
+        //            if (InValue >= 35.5)
+        //            {
+        //                tmp0 = (245.0 / 256.0) * InValue + 2.23;
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0;
+        //    }
+
+
+        //    return 0;
+        //}
+
+        //double adjustTemp(double InValue, double TA)
+        //{
+        //    double tmp0 = 0;
+        //    double tahigh0 = 0;
+        //    double talow0 = 0;
+
+        //    if (TA <= 27.5 && InValue > 36.5)
+        //    {
+        //        tahigh0 = (double)(34.84 + 0.148 * (TA - 25.0));
+        //        talow0 = (double)(32.66 + 0.186 * (TA - 25.0));
+
+        //        do
+        //        {
+
+        //            if (InValue > tahigh0)
+        //            {
+        //                tmp0 = (double)(36.8 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
+        //                break;
+        //            }
+
+        //            else if (InValue < talow0)
+        //            {
+        //                tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
+        //                break;
+        //            }
+
+        //            else if ((InValue <= tahigh0) && (InValue >= talow0))
+        //            {
+        //                tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0 = tmp0 - 1.5;
+        //    }
+
+        //    if ((TA < 27.5) && (TA >= 19) && (InValue <= 36.5))
+        //    {
+        //        do
+        //        {
+
+        //            if (InValue < 31.5)
+        //            {
+        //                tmp0 = (double)((90.0 / 256.0) * InValue + 25.15);
+        //                break;
+        //            }
+
+        //            if ((InValue >= 31.5) && (InValue < 32.5))
+        //            {
+        //                tmp0 = (double)((58.0 / 256.0) * InValue + 29.10);
+        //                break;
+        //            }
+
+        //            if ((InValue >= 32.5) && (InValue < 34.5))
+        //            {
+        //                tmp0 = (double)((60.0 / 256.0) * InValue + 28.85);
+        //                break;
+        //            }
+
+        //            if ((InValue >= 34.5) && (InValue < 36.5))
+        //            {
+        //                tmp0 = (double)((89.0 / 256.0) * InValue + 24.95);
+        //                break;
+        //            }
+        //            if (InValue >= 36.5)
+        //            {
+        //                tmp0 = (double)((130.0 / 256.0) * InValue + 19.12);
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0 = tmp0 - 0.6;
+        //    }
+
+        //    if ((TA > 27.5) && (TA <= 31.5) && (InValue >= 39.5))
+        //    {
+        //        tahigh0 = (double)(34.84 + 0.1 * (TA - 25.0));
+        //        talow0 = (double)(32.66 + 0.086 * (TA - 25.0));
+
+        //        do
+        //        {
+
+        //            if (InValue > tahigh0)
+        //            {
+        //                tmp0 = (double)(36.8 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
+        //                break;
+        //            }
+
+        //            else if (InValue < talow0)
+        //            {
+        //                tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
+        //                break;
+        //            }
+
+        //            else if ((InValue <= tahigh0) && (InValue >= talow0))
+        //            {
+        //                tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0 = tmp0 - 4.5;
+        //    }
+
+        //    if ((TA > 27.5) && (TA <= 31.5) && (InValue < 39.5))
+        //    {
+        //        do
+        //        {
+
+        //            if (InValue < 35.5)
+        //            {
+        //                tmp0 = (double)((69.0 / 256.0) * InValue + 26.83);
+        //                break;
+        //            }
+
+        //            else if ((InValue < 36.5) && (InValue >= 35.5))
+        //            {
+        //                tmp0 = (double)((35.0 / 256.0) * InValue + 31.55);
+        //                break;
+        //            }
+
+        //            else if ((InValue < 37.5) && (InValue >= 36.5))
+        //            {
+        //                tmp0 = (double)((58.0 / 256.0) * InValue + 28.2);
+        //                break;
+        //            }
+
+        //            else if ((InValue < 38.5) && (InValue >= 37.5))
+        //            {
+        //                tmp0 = (double)((40.0 / 256.0) * InValue + 30.81);
+        //                break;
+        //            }
+
+        //            else if ((InValue < 39.5) && (InValue >= 38.5))
+        //            {
+        //                tmp0 = (double)((130.0 / 256.0) * InValue + 16.78);
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0 = tmp0 - 0.0;
+        //    }
+
+        //    if ((TA > 31.5) && (TA <= 36.5) && (InValue < 41.5))
+        //    {
+        //        do
+        //        {
+
+        //            if (InValue < 38.5)
+        //            {
+        //                tmp0 = (double)((70.0 / 256.0) * InValue + 25.88);
+        //                break;
+        //            }
+
+        //            if ((InValue < 38.5) && (InValue >= 39.5))
+        //            {
+        //                tmp0 = (double)((38.0 / 256.0) * InValue + 30.56);
+        //                break;
+        //            }
+
+        //            if ((InValue < 39.5) && (InValue >= 40.5))
+        //            {
+        //                tmp0 = (double)((56.0 / 256.0) * InValue + 28.0);
+        //                break;
+        //            }
+
+        //            if ((InValue < 40.5) && (InValue >= 41.5))
+        //            {
+        //                tmp0 = (double)((60.0 / 256.0) * InValue + 27.28);
+        //                break;
+        //            }
+
+        //            if (InValue >= 41.5)
+        //            {
+        //                tmp0 = (double)((220.0 / 256.0) * InValue + 1.42);
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0 = tmp0 - 0.0;
+        //    }
+
+        //    if ((TA > 31.5) && (TA <= 36.5) && (InValue >= 41.5))
+        //    {
+        //        tahigh0 = (double)(34.84 + 0.1 * (TA - 25.0));
+        //        talow0 = (double)(32.66 + 0.086 * (TA - 25.0));
+
+        //        do
+        //        {
+
+        //            if (InValue > tahigh0)
+        //            {
+        //                tmp0 = (double)(36.8 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
+        //                break;
+        //            }
+
+        //            else if (InValue < talow0)
+        //            {
+        //                tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
+        //                break;
+        //            }
+
+        //            else if ((InValue <= tahigh0) && (InValue >= talow0))
+        //            {
+        //                tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0 = tmp0 - 4.5;
+        //    }
+
+        //    if (TA >= 36.5 && InValue < 46.5)
+        //    {
+        //        do
+        //        {
+
+        //            if (InValue >= 40.5)
+        //            {
+        //                tmp0 = (double)((35.0 / 256.0) * InValue + 30.83);
+        //                break;
+        //            }
+
+        //            if ((InValue >= 40.5) && (InValue < 42.5))
+        //            {
+        //                tmp0 = (double)((58.0 / 256.0) * InValue + 27.2);
+        //                break;
+        //            }
+
+        //            if ((InValue >= 42.5) && (InValue < 44.5))
+        //            {
+        //                tmp0 = (double)((40.0 / 256.0) * InValue + 30.0);
+        //                break;
+        //            }
+
+        //            if ((InValue >= 44.5) && (InValue < 46.5))
+        //            {
+        //                tmp0 = (double)((130.0 / 256.0) * InValue + 14.41);
+        //                break;
+        //            }
+
+        //            if (InValue < 46.5)
+        //            {
+        //                tmp0 = (double)((100.0 / 256.0) * InValue + 19.92);
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0 = tmp0 - 0.0;
+        //    }
+
+        //    if (TA > 36.5 && InValue >= 46.5)
+        //    {
+        //        tahigh0 = (double)(34.84 + 0.1 * (TA - 25.0));
+        //        talow0 = (double)(32.66 + 0.086 * (TA - 25.0));
+
+        //        do
+        //        {
+
+        //            if (InValue > tahigh0)
+        //            {
+        //                tmp0 = (double)(36.8 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
+        //                break;
+        //            }
+
+        //            else if (InValue < talow0)
+        //            {
+        //                tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
+        //                break;
+        //            }
+
+        //            else if ((InValue <= tahigh0) && (InValue >= talow0))
+        //            {
+        //                tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0 = tmp0 - 9.7;
+        //    }
+        //    return 0;
+        //}
     }
 }
