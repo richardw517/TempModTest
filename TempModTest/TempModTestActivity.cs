@@ -57,7 +57,7 @@ namespace TempModTest
             timer.Elapsed += OnTimerEvent;
             timer.Enabled = true;
             timer.AutoReset = true;
-            timer.Interval = 1000;
+            timer.Interval = 250;// 1000;
             timer.Stop();
 
             usbManager = GetSystemService(Context.UsbService) as UsbManager;
