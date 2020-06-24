@@ -294,181 +294,250 @@ namespace TempModTest
             }
         }
 
-        double adjustTemp(double InValue, double TA)
+        double adjustTemp(double TB, double TA)
         {
-
             double tmp0 = 0;
-            double tmp1 = 0;
-
-            if ((TA >= 27.0) && (TA < 31.0))
+            if (36.5 <= TA)
             {
-                do
-                {
-
-                    if ((InValue >= 38.5) && (InValue < 39.5))
-                    {
-                        tmp0 = (200.0 / 256.0) * InValue + 6.45;
-                        break;
-                    }
-
-                    if ((InValue >= 37.5) && (InValue < 38.5))
-                    {
-                        tmp0 = (40.0 / 256.0) * InValue + 30.66;
-                        break;
-                    }
-
-                    if ((InValue < 37.5) && (InValue >= 36.5))
-                    {
-                        tmp0 = (58.0 / 256.0) * InValue + 28.2;
-                        break;
-                    }
-
-                    if ((InValue < 36.5) && (InValue >= 35.5))
-                    {
-                        tmp0 = (35.0 / 256.0) * InValue + 31.55;
-                        break;
-                    }
-
-                    if (InValue < 35.5)
-                    {
-                        tmp0 = (39.0 / 256.0) * InValue + 31.1;
-                        break;
-                    }
-
-                    if (InValue >= 39.5)
-                    {
-                        tmp0 = (40.0 / 256.0) * InValue + 31.39;
-                        break;
-                    }
-
-
-                } while (false);
-
-                return tmp0;
+                if (46.5 <= TB)
+                    tmp0 = (105.0 / 256.0) * TB + 19.92;
+                else if (44.5 <= TB)
+                    tmp0 = (210.0 / 256.0) * TB + 0.82;
+                else if (42.5 <= TB)
+                    tmp0 = (40.0 / 256.0) * TB + 30.2;
+                else if (40.5 <= TB)
+                    tmp0 = (58.0 / 256.0) * TB + 27.2;
+                else
+                    tmp0 = (35.0 / 256.0) * TB + 30.83;
+            } else if (31 <= TA)
+            {
+                if (41.5 <= TB)
+                    tmp0 = (220.0 / 256.0) * TB + 1.42;
+                else if (40.5 <= TB)
+                    tmp0 = (60.0 / 256.0) * TB + 27.28;
+                else if (39.5 <= TB)
+                    tmp0 = (56.0 / 256.0) * TB + 28;
+                else if (38.5 <= TB)
+                    tmp0 = (38.0 / 256.0) * TB + 30.56;
+                else
+                    tmp0 = (70.0 / 256.0) * TB + 25.88;
+            } else if (27 <= TA)
+            {
+                if (39.5 <= TB)
+                    tmp0 = (100.0 / 256.0) * TB + 23.45;
+                else if (38.5 <= TB)
+                    tmp0 = (130.0 / 256.0) * TB + 18.79;
+                else if (37.5 <= TB)
+                    tmp0 = (250.0 / 256.0) * TB + 0.7;
+                else if (36.5 <= TB)
+                    tmp0 = (58.0 / 256.0) * TB + 28.71;
+                else if (35.5 <= TB)
+                    tmp0 = (38.0 / 256.0) * TB + 31.52;
+                else
+                    tmp0 = (71.0 / 256.0) * TB + 26.83;
+            } else if (19 <= TA)
+            {
+                if (36.5 <= TB)
+                    tmp0 = (130.0 / 256.0) * TB + 19.12;
+                else if (34.5 <= TB)
+                    tmp0 = (89.0 / 256.0) * TB + 24.95;
+                else if (32.5 <= TB)
+                    tmp0 = (60.0 / 256.0) * TB + 28.85;
+                else if (31.5 <= TB)
+                    tmp0 = (58.0 / 256.0) * TB + 29.1;
+                else
+                    tmp0 = (90.0 / 256.0) * TB + 25.15;
+            } else if (10 <= TA)
+            {
+                if (36.5 <= TB)
+                    tmp0 = (200.0 / 256.0) * TB + 9.13;
+                else if (34.5 <= TB)
+                    tmp0 = (100.0 / 256.0) * TB + 23.39;
+                else if (32.5 <= TB)
+                    tmp0 = (51.0 / 256.0) * TB + 29.99;
+                else if (31.5 <= TB)
+                    tmp0 = (58.0 / 256.0) * TB + 29.1;
+                else
+                    tmp0 = (80.0 / 256.0) * TB + 26.45;
             }
 
-            if (TA >= 31)
-            {
-                do
-                {
-
-                    if (InValue >= 41.5)
-                    {
-                        tmp0 = (220.0 / 256.0) * InValue + 1.42;
-                        break;
-                    }
-
-                    if ((InValue >= 40.5) && (InValue < 41.5))
-                    {
-                        tmp0 = (60.0 / 256.0) * InValue + 27.28;
-                        break;
-                    }
-
-                    if ((InValue >= 39.5) && (InValue < 40.5))
-                    {
-                        tmp0 = (56.0 / 256.0) * InValue + 28;
-                        break;
-                    }
-
-                    if ((InValue >= 38.5) && (InValue < 39.5))
-                    {
-                        tmp0 = (38.0 / 256.0) * InValue + 30.56;
-                        break;
-                    }
-
-                    if (InValue < 38.5)
-                    {
-                        tmp0 = (70.0 / 256.0) * InValue + 25.88;
-                        break;
-                    }
-
-                } while (false);
-
-                return tmp0;
-            }
-
-            if ((TA < 27) && (TA >= 19))
-            {
-                do
-                {
-
-                    if (InValue < 31.5)
-                    {
-                        tmp0 = (80.0 / 256.0) * InValue + 26.71;
-                        break;
-                    }
-
-                    if ((InValue >= 31.5) && (InValue < 32.5))
-                    {
-                        tmp0 = (58.0 / 256.0) * InValue + 29.1;
-                        break;
-                    }
-
-                    if ((InValue >= 32.5) && (InValue < 34.5))
-                    {
-                        tmp0 = (61.0 / 256.0) * InValue + 28.5;
-                        break;
-                    }
-
-                    if ((InValue >= 34.5) && (InValue < 36.5))
-                    {
-                        tmp0 = (90.0 / 256.0) * InValue + 24.37;
-                        break;
-                    }
-                    if (InValue >= 36.5)
-                    {
-                        tmp0 = (245.0 / 256.0) * InValue + 2.35;
-                        break;
-                    }
-
-                } while (false);
-
-                return tmp0;
-            }
-
-            if ((TA < 19) && (TA >= 10))
-            {
-                do
-                {
-
-                    if (InValue < 31.5)
-                    {
-                        tmp0 = (80.0 / 256.0) * InValue + 6.58;
-                        break;
-                    }
-
-                    if ((InValue >= 31.5) && (InValue < 32.5))
-                    {
-                        tmp0 = (58.0 / 256.0) * InValue + 29.03;
-                        break;
-                    }
-
-                    if ((InValue >= 32.5) && (InValue < 34.5))
-                    {
-                        tmp0 = (51.0 / 256.0) * InValue + 28.45;
-                        break;
-                    }
-
-                    if ((InValue >= 34.5) && (InValue < 35.5))
-                    {
-                        tmp0 = (190.0 / 256.0) * InValue + 10.99;
-                        break;
-                    }
-
-                    if (InValue >= 35.5)
-                    {
-                        tmp0 = (245.0 / 256.0) * InValue + 2.23;
-                        break;
-                    }
-
-                } while (false);
-
-                return tmp0;
-            }
-
-
-            return 0;
+            return tmp0;
         }
+        //double adjustTemp(double InValue, double TA)
+        //{
+
+        //    double tmp0 = 0;
+        //    double tmp1 = 0;
+
+        //    if ((TA >= 27.0) && (TA < 31.0))
+        //    {
+        //        do
+        //        {
+
+        //            if ((InValue >= 38.5) && (InValue < 39.5))
+        //            {
+        //                tmp0 = (200.0 / 256.0) * InValue + 6.45;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 37.5) && (InValue < 38.5))
+        //            {
+        //                tmp0 = (40.0 / 256.0) * InValue + 30.66;
+        //                break;
+        //            }
+
+        //            if ((InValue < 37.5) && (InValue >= 36.5))
+        //            {
+        //                tmp0 = (58.0 / 256.0) * InValue + 28.2;
+        //                break;
+        //            }
+
+        //            if ((InValue < 36.5) && (InValue >= 35.5))
+        //            {
+        //                tmp0 = (35.0 / 256.0) * InValue + 31.55;
+        //                break;
+        //            }
+
+        //            if (InValue < 35.5)
+        //            {
+        //                tmp0 = (39.0 / 256.0) * InValue + 31.1;
+        //                break;
+        //            }
+
+        //            if (InValue >= 39.5)
+        //            {
+        //                tmp0 = (40.0 / 256.0) * InValue + 31.39;
+        //                break;
+        //            }
+
+
+        //        } while (false);
+
+        //        return tmp0;
+        //    }
+
+        //    if (TA >= 31)
+        //    {
+        //        do
+        //        {
+
+        //            if (InValue >= 41.5)
+        //            {
+        //                tmp0 = (220.0 / 256.0) * InValue + 1.42;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 40.5) && (InValue < 41.5))
+        //            {
+        //                tmp0 = (60.0 / 256.0) * InValue + 27.28;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 39.5) && (InValue < 40.5))
+        //            {
+        //                tmp0 = (56.0 / 256.0) * InValue + 28;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 38.5) && (InValue < 39.5))
+        //            {
+        //                tmp0 = (38.0 / 256.0) * InValue + 30.56;
+        //                break;
+        //            }
+
+        //            if (InValue < 38.5)
+        //            {
+        //                tmp0 = (70.0 / 256.0) * InValue + 25.88;
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0;
+        //    }
+
+        //    if ((TA < 27) && (TA >= 19))
+        //    {
+        //        do
+        //        {
+
+        //            if (InValue < 31.5)
+        //            {
+        //                tmp0 = (80.0 / 256.0) * InValue + 26.71;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 31.5) && (InValue < 32.5))
+        //            {
+        //                tmp0 = (58.0 / 256.0) * InValue + 29.1;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 32.5) && (InValue < 34.5))
+        //            {
+        //                tmp0 = (61.0 / 256.0) * InValue + 28.5;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 34.5) && (InValue < 36.5))
+        //            {
+        //                tmp0 = (90.0 / 256.0) * InValue + 24.37;
+        //                break;
+        //            }
+        //            if (InValue >= 36.5)
+        //            {
+        //                tmp0 = (245.0 / 256.0) * InValue + 2.35;
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0;
+        //    }
+
+        //    if ((TA < 19) && (TA >= 10))
+        //    {
+        //        do
+        //        {
+
+        //            if (InValue < 31.5)
+        //            {
+        //                tmp0 = (80.0 / 256.0) * InValue + 6.58;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 31.5) && (InValue < 32.5))
+        //            {
+        //                tmp0 = (58.0 / 256.0) * InValue + 29.03;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 32.5) && (InValue < 34.5))
+        //            {
+        //                tmp0 = (51.0 / 256.0) * InValue + 28.45;
+        //                break;
+        //            }
+
+        //            if ((InValue >= 34.5) && (InValue < 35.5))
+        //            {
+        //                tmp0 = (190.0 / 256.0) * InValue + 10.99;
+        //                break;
+        //            }
+
+        //            if (InValue >= 35.5)
+        //            {
+        //                tmp0 = (245.0 / 256.0) * InValue + 2.23;
+        //                break;
+        //            }
+
+        //        } while (false);
+
+        //        return tmp0;
+        //    }
+
+
+        //    return 0;
+        //}
 
         //double adjustTemp(double InValue, double TA)
         //{
