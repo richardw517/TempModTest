@@ -266,7 +266,7 @@ namespace TempModTest
                 Context context = Application.Context;
                 Java.IO.File[] dirs = context.GetExternalFilesDirs(null);
                 string sdCardPath = null;
-                foreach(Java.IO.File folder in dirs)
+                foreach (Java.IO.File folder in dirs)
                 {
                     bool isRemovable = Android.OS.Environment.InvokeIsExternalStorageRemovable(folder);
                     bool isEmulated = Android.OS.Environment.InvokeIsExternalStorageEmulated(folder);
@@ -294,7 +294,155 @@ namespace TempModTest
             }
         }
 
+        struct FormulaItem
+        {
+            public double ta;
+            public List<double[]> args;
+        }
+
+        List<FormulaItem> getFixedFormula()
+        {
+            List<FormulaItem> formula = new List<FormulaItem>();
+            List<double[]> args = new List<double[]>();
+            args.Add(new double[] { 46.5, 105.0, 256.0, 19.92 });
+            args.Add(new double[] { 44.5, 210.0, 256.0, 0.82 });
+            args.Add(new double[] { 42.5, 40.0, 256.0, 30.2});
+            args.Add(new double[] { 40.5, 58.0, 256.0, 27.2 });
+            args.Add(new double[] { -10000, 35.0, 256.0, 30.83 });
+            formula.Add(new FormulaItem(){ ta=36.5, args=args });
+
+            args = new List<double[]>();
+            args.Add(new double[] { 41.5, 220.0, 256.0, 1.42 });
+            args.Add(new double[] { 40.5, 60.0, 256.0, 27.28 });
+            args.Add(new double[] { 39.5, 56.0, 256.0, 28.0 });
+            args.Add(new double[] { 38.5, 38.0, 256.0, 30.56 });
+            args.Add(new double[] { -10000, 70.0, 256.0, 25.88 });
+            formula.Add(new FormulaItem() { ta = 31.5, args = args });
+
+            args = new List<double[]>();
+            args.Add(new double[] { 39.5, 100.0, 256.0, 23.45 });
+            args.Add(new double[] { 38.5, 130.0, 256.0, 18.79 });
+            args.Add(new double[] { 37.5, 250.0, 256.0, 0.7 });
+            args.Add(new double[] { 36.5, 58.0, 256.0, 28.71 });
+            args.Add(new double[] { 35.5, 38.0, 256.0, 31.52 });
+            args.Add(new double[] { -10000, 71.0, 256.0, 26.83 });
+            formula.Add(new FormulaItem() { ta = 27.0, args = args });
+
+            args = new List<double[]>();
+            args.Add(new double[] { 36.5, 130.0, 256.0, 19.12 });
+            args.Add(new double[] { 34.5, 89.0, 256.0, 24.95 });
+            args.Add(new double[] { 32.5, 60.0, 256.0, 28.85 });
+            args.Add(new double[] { 31.5, 58.0, 256.0, 29.1 });
+            args.Add(new double[] { -10000, 90.0, 256.0, 25.15 });
+            formula.Add(new FormulaItem() { ta = 19.0, args = args });
+
+            args = new List<double[]>();
+            args.Add(new double[] { 36.5, 200.0, 256.0, 9.13 });
+            args.Add(new double[] { 34.5, 100.0, 256.0, 23.39 });
+            args.Add(new double[] { 32.5, 51.0, 256.0, 29.99 });
+            args.Add(new double[] { 31.5, 58.0, 256.0, 29.1 });
+            args.Add(new double[] { -10000, 80.0, 256.0, 26.45 });
+            formula.Add(new FormulaItem() { ta = 10.0, args = args });
+
+            return formula;
+        }
+
+        List<FormulaItem> mFormula = null;
+
         double adjustTemp(double TB, double TA)
+        {
+            if(mFormula == null)
+            {
+                mFormula = getFixedFormula();
+                try
+                {
+                    Context context = Application.Context;
+                    Java.IO.File[] dirs = context.GetExternalFilesDirs(null);
+                    string sdCardPath = null;
+                    foreach (Java.IO.File folder in dirs)
+                    {
+                        bool isRemovable = Android.OS.Environment.InvokeIsExternalStorageRemovable(folder);
+                        bool isEmulated = Android.OS.Environment.InvokeIsExternalStorageEmulated(folder);
+
+                        if (isRemovable && !isEmulated)
+                        {
+                            sdCardPath = folder.Path.Split("/Android")[0];
+                            break;
+                        }
+                    }
+                    if (sdCardPath != null)
+                    {
+                        var filePath = System.IO.Path.Combine(sdCardPath, "formula.txt");
+                        if (Directory.Exists(sdCardPath))
+                        {
+                            StreamReader sr = new StreamReader(filePath);
+                            string line;
+                            mFormula = new List<FormulaItem>();
+                            double ta = 0;
+                            List<double[]> args = new List<double[]>();
+                            while((line = sr.ReadLine()) != null)
+                            {
+                                line = line.Trim();
+                                if ("".Equals(line))
+                                    continue;
+                                string[] subs = line.Split(",");
+                                if(subs.Length == 4)
+                                {
+                                    double[] doubles = Array.ConvertAll(subs, Double.Parse);
+                                    args.Add(doubles);
+                                } 
+                                else if (subs.Length == 1)
+                                {
+                                    if(args.Count > 0)
+                                    {
+                                        mFormula.Add(new FormulaItem() { ta = ta, args = args });
+                                        args = new List<double[]>();
+                                    }
+                                    ta = Convert.ToDouble(subs[0]);
+                                }
+                            }
+                            if (args.Count > 0)
+                            {
+                                mFormula.Add(new FormulaItem() { ta = ta, args = args });
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    
+                }
+            }
+            return calculateTemp(TB, TA);
+        }
+
+        double calculateTemp(double TB, double TA)
+        {
+            double tmp0 = 0;
+            List<double[]> args = null;
+            foreach(FormulaItem item in mFormula)
+            {
+                if(item.ta <= TA)
+                {
+                    args = item.args;
+                    break;
+                }
+            }
+            if(args != null)
+            {
+                foreach(double[] arg in args)
+                {
+                    if(arg[0] <= TB)
+                    {
+                        tmp0 = arg[1] / arg[2] * TB + arg[3];
+                        break;
+                    }
+                }
+            }
+            return tmp0;
+        }
+
+        double adjustTemp_fixed(double TB, double TA)
         {
             double tmp0 = 0;
             if (36.5 <= TA)
