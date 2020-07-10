@@ -410,18 +410,38 @@ namespace TempModTest
         void processFrame()
         {
             int ambient = frame[9] * 256 + frame[10];
-            int startLine = 13 + 2 * 16 * 5; //skip 5 lines
-            int maxCenter = 0;
-            for (int j = 0; j < 6; j++, startLine += 2 * 16)
+            double ambientTemp = data2Temp(ambient);
+
+            int startRow = 5, startCol = 5, rowCount = 6, colCount = 6;
+
+            //use new matrix 
+            if(ambient < 30)
             {
-                for (int i = 0, index = startLine + 2 * 5; i < 6; i++, index += 2)
+                startRow = 7;
+                startCol = 7;
+                rowCount = 2;
+                colCount = 4;
+            } else
+            {
+                startRow = 7;
+                startCol = 8;
+                rowCount = 2;
+                colCount = 2;
+            }
+            //end use new matrix
+
+            int startLine = 13 + 2 * 16 * startRow; //skip startRow lines
+            int maxCenter = 0;
+            for (int j = 0; j < rowCount; j++, startLine += 2 * 16)
+            {
+                for (int i = 0, index = startLine + 2 * startCol; i < colCount; i++, index += 2)
                 {
                     int data = frame[index] * 256 + frame[index + 1];
                     if (data > maxCenter)
                         maxCenter = data;
                 }
             }
-            double ambientTemp = data2Temp(ambient);
+            
             double maxCenterTemp = data2Temp(maxCenter);
             double adjustedTemp = adjustTemp(maxCenterTemp, ambientTemp);
 

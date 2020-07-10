@@ -41,7 +41,7 @@ using Hoho.Android.UsbSerial.Util;
 
 namespace TempModTest
 {
-    [Activity(Label = "TempModTest", MainLauncher = true, Icon = "@drawable/icon")]
+    [Activity(Label = "TempModTest v1.0.0", MainLauncher = true, Icon = "@drawable/icon")]
     [IntentFilter(new[] { UsbManager.ActionUsbDeviceAttached })]
     [MetaData(UsbManager.ActionUsbDeviceAttached, Resource = "@xml/device_filter")]
     public class MainActivity : Activity
