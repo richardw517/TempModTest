@@ -29,6 +29,7 @@ namespace TempModTest
         public const string EXTRA_TAG = "PortInfo";
         const int READ_WAIT_MILLIS = 200;
         const int WRITE_WAIT_MILLIS = 200;
+        const short EEPROM_SIZE = 192;
 
         UsbSerialPort port;
 
@@ -41,6 +42,20 @@ namespace TempModTest
         Button btnStart;
         Button btnStop;
         Button btnClear;
+        Button btnLoadFromFile;
+        Button btnLoadFromEEPROM;
+        Button btnSaveToEEPROM;
+
+        enum OPERATION
+        {
+            IDLE,
+            INIT,
+            READ,
+            LOADEEPROM,
+            SAVEEEPROM,
+        };
+
+        OPERATION mOperation;
 
         SerialInputOutputManager serialIoManager;
         private System.Timers.Timer timer = null;
@@ -69,26 +84,148 @@ namespace TempModTest
             btnStart = FindViewById<Button>(Resource.Id.start);
             btnStop = FindViewById<Button>(Resource.Id.stop);
             btnClear = FindViewById<Button>(Resource.Id.clear);
+            btnLoadFromFile = FindViewById<Button>(Resource.Id.loadFromFile);
+            btnLoadFromEEPROM = FindViewById<Button>(Resource.Id.loadFromEEPROM);
+            btnSaveToEEPROM = FindViewById<Button>(Resource.Id.saveToEEPROM);
+
+            loadFormulaFromFile();
 
             btnStart.Click += delegate
             {
+                switchOperation(OPERATION.READ);
                 timer.Start();
             };
 
             btnStop.Click += delegate
             {
                 timer.Stop();
+                switchOperation(OPERATION.IDLE);
             };
 
             btnClear.Click += delegate
             {
                 dumpTextView.Text = "";
             };
+
+            btnLoadFromFile.Click += delegate
+            {
+                loadFormulaFromFile();
+            };
+
+            btnLoadFromEEPROM.Click += delegate
+            {
+                onBtnLoadFromEEPROM();
+            };
+
+            btnSaveToEEPROM.Click += delegate
+            {
+                switchOperation(OPERATION.SAVEEEPROM);
+                if (serialIoManager.IsOpen)
+                {
+                    byte[] writeCmd = serializeFomulaToSaveEEPROM();
+                    if(writeCmd != null)
+                        port.Write(writeCmd, WRITE_WAIT_MILLIS);
+                }
+            };
+        }
+
+        void onBtnLoadFromEEPROM()
+        {
+            switchOperation(OPERATION.LOADEEPROM);
+            if (serialIoManager.IsOpen)
+            {
+                port.Write(loadEEPROM, WRITE_WAIT_MILLIS);
+            }
+        }
+
+        void loadFormulaFromFile()
+        {
+            try
+            {
+                Context context = Application.Context;
+                Java.IO.File[] dirs = context.GetExternalFilesDirs(null);
+                string sdCardPath = null;
+                foreach (Java.IO.File folder in dirs)
+                {
+                    bool isRemovable = Android.OS.Environment.InvokeIsExternalStorageRemovable(folder);
+                    bool isEmulated = Android.OS.Environment.InvokeIsExternalStorageEmulated(folder);
+
+                    if (isRemovable && !isEmulated)
+                    {
+                        sdCardPath = folder.Path.Split("/Android")[0];
+                        break;
+                    }
+                }
+                if (sdCardPath != null)
+                {
+                    var filePath = System.IO.Path.Combine(sdCardPath, "formula.txt");
+                    if (Directory.Exists(sdCardPath))
+                    {
+                        StreamReader sr = new StreamReader(filePath);
+                        string line;
+                        List<FormulaItem> formula = new List<FormulaItem>();
+                        double ta = 0;
+                        List<double[]> args = new List<double[]>();
+                        while ((line = sr.ReadLine()) != null)
+                        {
+                            line = line.Trim();
+                            if ("".Equals(line))
+                                continue;
+                            string[] subs = line.Split(",");
+                            if (subs.Length == 4)
+                            {
+                                double[] doubles = Array.ConvertAll(subs, Double.Parse);
+                                args.Add(doubles);
+                            }
+                            else if (subs.Length == 1)
+                            {
+                                if (args.Count > 0)
+                                {
+                                    formula.Add(new FormulaItem() { ta = ta, args = args });
+                                    args = new List<double[]>();
+                                }
+                                ta = Convert.ToDouble(subs[0]);
+                            }
+                        }
+                        if (args.Count > 0)
+                        {
+                            formula.Add(new FormulaItem() { ta = ta, args = args });
+                        }
+
+                        mFormula = formula;
+                        Toast.MakeText(Application.Context, "Loaded formula from formula.txt on SD Card", ToastLength.Long).Show();
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+        }
+
+        void switchOperation(OPERATION op)
+        {
+            if(op == OPERATION.IDLE)
+            {
+                btnStart.Enabled = true;
+                //btnStop.Enabled = true;
+                btnLoadFromEEPROM.Enabled = true;
+                btnSaveToEEPROM.Enabled = true;
+            }
+            else
+            {
+                btnStart.Enabled = false;
+                //btnStop.Enabled = true;
+                btnLoadFromEEPROM.Enabled = false;
+                btnSaveToEEPROM.Enabled = false;
+            }
+            mOperation = op;
         }
 
         byte[] init0data = new byte[] { 0xAC, 0xD0, 0x2F, 0x04, 0x00 };
         byte[] initdata = new byte[] { 0xAD, 0x00, 0x02, 0xD0, 0xB0, 0x10 };
         byte[] getdata = new byte[] { 0xad, 0x02, 0x0d, 0xd0, 0x4e };
+        byte[] loadEEPROM = new byte[] { 0xE2, 0x00, 0x00, (byte)(EEPROM_SIZE>>8), (byte)(EEPROM_SIZE & 0xff)};
 
         private void OnTimerEvent(object sender, System.Timers.ElapsedEventArgs e)
         {
@@ -166,10 +303,13 @@ namespace TempModTest
             try
             {
                 serialIoManager.Open(usbManager);
+                switchOperation(OPERATION.INIT);
                 WriteData(init0data);
                 await Task.Delay(200);
                 WriteData(initdata);
                 await Task.Delay(200);
+                //switchOperation(OPERATION.IDLE);
+                onBtnLoadFromEEPROM();
             }
             catch (Java.IO.IOException e)
             {
@@ -191,6 +331,42 @@ namespace TempModTest
 
         void UpdateReceivedData(byte[] data)
         {
+            if(mOperation == OPERATION.INIT)
+            {
+                return;
+            }
+            else if(mOperation == OPERATION.LOADEEPROM)
+            {
+                switchOperation(OPERATION.IDLE);
+                if(data.Length == EEPROM_SIZE+1 && data[0] == 0xE2)
+                {
+                    List<FormulaItem> formula = getFormulaFromEEPROMData(data);
+                    if (formula != null)
+                    {
+                        mFormula = formula;
+                        Toast.MakeText(Application.Context, "Loaded Formula From EEPROM", ToastLength.Long).Show();
+                    }
+                }
+                else
+                {
+                    Toast.MakeText(Application.Context, "Load From EEPROM Failed", ToastLength.Long).Show();
+                }
+                return;
+            }
+            else if(mOperation == OPERATION.SAVEEEPROM)
+            {
+                switchOperation(OPERATION.IDLE);
+                if(data.Length > 0 && data[0] == 0xE1)
+                {
+                    Toast.MakeText(Application.Context, "Saved formula to EEPROM", ToastLength.Long).Show();
+                }
+                else
+                {
+                    Toast.MakeText(Application.Context, "Save to EEPROM Failed", ToastLength.Long).Show();
+                }
+                return;
+            }
+            //handle read data
             if (data.Length < 2)
             {
                 writeIndex = 0;
@@ -300,7 +476,129 @@ namespace TempModTest
             public List<double[]> args;
         }
 
-        List<FormulaItem> getFixedFormula()
+        short doubleToShort(double v)
+        {
+            v *= 100;
+            short sh;
+            if (v > Int16.MaxValue)
+                sh = Int16.MaxValue;
+            else if (v < Int16.MinValue)
+                sh = Int16.MinValue;
+            else
+                sh = Convert.ToInt16(v);
+            return sh;
+        }
+
+        void fillData(byte[] data, int p, double v)
+        {
+            short sh = doubleToShort(v);
+            data[p] = (byte)(sh >> 8);
+            data[p+1] = (byte)(sh & 0xff);
+        }
+
+        double fetchData(byte[] data, int p)
+        {
+            short v = (short)((data[p] << 8) | (data[p + 1]));
+            return v / 100.0;
+        }
+
+        byte[] serializeFomulaToSaveEEPROM()
+        {
+            byte[] data = new byte[EEPROM_SIZE + 5];
+            try
+            {                
+                data[0] = 0xE1;
+                data[1] = 0x00;
+                data[2] = 0x00;
+                data[3] = (byte)(EEPROM_SIZE >> 8);
+                data[4] = (byte)(EEPROM_SIZE & 0xff);
+                int p = 5;
+
+                if(mFormula.Count > Byte.MaxValue)
+                {
+                    Toast.MakeText(Application.Context, "Formula contains too many items!", ToastLength.Long).Show();
+                    return null;
+                }
+                data[p++] = (byte)mFormula.Count;
+                foreach (FormulaItem item in mFormula)
+                {
+                    fillData(data, p, item.ta);
+                    p += 2;
+                    if (item.args.Count > Byte.MaxValue)
+                    {
+                        Toast.MakeText(Application.Context, "Formula contains too many items!", ToastLength.Long).Show();
+                        return null;
+                    }
+                    data[p++] = (byte)item.args.Count;
+                    foreach (double[] arg in item.args)
+                    {
+                        for (int i = 0; i < 4; ++i)
+                        {
+                            if (i == 2)
+                                continue; // skip 256.0
+                            fillData(data, p, arg[i]);
+                            p += 2;
+                        }
+                    }
+                }
+                if (p > EEPROM_SIZE + 3)
+                {
+                    Toast.MakeText(Application.Context, "Formula oversize!", ToastLength.Long).Show();
+                    return null;
+                }
+                data[EEPROM_SIZE+3] = 0x55;
+                data[EEPROM_SIZE+4] = 0xAA;
+            } catch(IndexOutOfRangeException)
+            {
+                Toast.MakeText(Application.Context, "Formula oversize!", ToastLength.Long).Show();
+                return null;
+            }            
+            return data;
+        }
+
+        List<FormulaItem> getFormulaFromEEPROMData(byte[] data)
+        {
+            if(data.Length != EEPROM_SIZE+1)
+            {
+                Toast.MakeText(Application.Context, "Incorrect EEPROM formula size!", ToastLength.Long).Show();
+                return null;
+            }
+            if(data[0] != 0xE2 || data[EEPROM_SIZE-1] != 0x55 || data[EEPROM_SIZE] != 0xAA)
+            {
+                Toast.MakeText(Application.Context, "Incorrect EEPROM formula signature!", ToastLength.Long).Show();
+                return null;
+            }
+            int p = 1;
+            List<FormulaItem> formula = new List<FormulaItem>();
+            byte n = data[p++];
+            for(int i = 0; i < n; ++i)
+            {
+                double ta = fetchData(data, p);
+                p += 2;
+                byte k = data[p++];
+                List<double[]> args = new List<double[]>();
+                for (int j = 0; j < k; ++j)
+                {
+                    double[] arg = new double[4];
+                    for (int s = 0; s < 4; ++s)
+                    {
+                        if(s == 2)
+                        {
+                            arg[s] = 256.0;
+                            continue; //skip 256.0
+                        }
+                        arg[s] = fetchData(data, p);
+                        p += 2;
+                    }
+                    args.Add(arg);
+                }
+                formula.Add(new FormulaItem() { ta = ta, args = args });
+            }
+            
+            return formula;
+        }
+
+        static List<FormulaItem> getFixedFormula()
         {
             List<FormulaItem> formula = new List<FormulaItem>();
             List<double[]> args = new List<double[]>();
@@ -347,72 +645,10 @@ namespace TempModTest
             return formula;
         }
 
-        List<FormulaItem> mFormula = null;
+        List<FormulaItem> mFormula = getFixedFormula();
 
         double adjustTemp(double TB, double TA)
         {
-            if(mFormula == null)
-            {
-                mFormula = getFixedFormula();
-                try
-                {
-                    Context context = Application.Context;
-                    Java.IO.File[] dirs = context.GetExternalFilesDirs(null);
-                    string sdCardPath = null;
-                    foreach (Java.IO.File folder in dirs)
-                    {
-                        bool isRemovable = Android.OS.Environment.InvokeIsExternalStorageRemovable(folder);
-                        bool isEmulated = Android.OS.Environment.InvokeIsExternalStorageEmulated(folder);
-
-                        if (isRemovable && !isEmulated)
-                        {
-                            sdCardPath = folder.Path.Split("/Android")[0];
-                            break;
-                        }
-                    }
-                    if (sdCardPath != null)
-                    {
-                        var filePath = System.IO.Path.Combine(sdCardPath, "formula.txt");
-                        if (Directory.Exists(sdCardPath))
-                        {
-                            StreamReader sr = new StreamReader(filePath);
-                            string line;
-                            mFormula = new List<FormulaItem>();
-                            double ta = 0;
-                            List<double[]> args = new List<double[]>();
-                            while((line = sr.ReadLine()) != null)
-                            {
-                                line = line.Trim();
-                                if ("".Equals(line))
-                                    continue;
-                                string[] subs = line.Split(",");
-                                if(subs.Length == 4)
-                                {
-                                    double[] doubles = Array.ConvertAll(subs, Double.Parse);
-                                    args.Add(doubles);
-                                } 
-                                else if (subs.Length == 1)
-                                {
-                                    if(args.Count > 0)
-                                    {
-                                        mFormula.Add(new FormulaItem() { ta = ta, args = args });
-                                        args = new List<double[]>();
-                                    }
-                                    ta = Convert.ToDouble(subs[0]);
-                                }
-                            }
-                            if (args.Count > 0)
-                            {
-                                mFormula.Add(new FormulaItem() { ta = ta, args = args });
-                            }
-                        }
-                    }
-                }
-                catch
-                {
-                    
-                }
-            }
             return calculateTemp(TB, TA);
         }
 

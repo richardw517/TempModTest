@@ -31,6 +31,34 @@
 		android:layout_below="@+id/demoTitle"
 		android:layout_toRightOf="@+id/stop"
 		android:text="Clear" />
+	<Button
+		android:id="@+id/loadFromFile"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/demoTitle"
+		android:layout_toRightOf="@+id/clear"
+		android:text="Load File" />
+	<!--<Button
+		android:id="@+id/saveToFile"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/demoTitle"
+		android:layout_toRightOf="@+id/loadFromFile"
+		android:text="Save File" />-->
+	<Button
+		android:id="@+id/loadFromEEPROM"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/demoTitle"
+		android:layout_toRightOf="@+id/loadFromFile"
+		android:text="Load EEPROM" />
+	<Button
+		android:id="@+id/saveToEEPROM"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/demoTitle"
+		android:layout_toRightOf="@+id/loadFromEEPROM"
+		android:text="Save EEPROM" />
 	<View
 		android:id="@+id/separator"
 		android:layout_width="match_parent"
