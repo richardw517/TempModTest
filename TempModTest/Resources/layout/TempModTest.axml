@@ -46,6 +46,7 @@
 		android:layout_toRightOf="@+id/loadFromFile"
 		android:text="Save File" />-->
 	<Button
+		android:visibility="gone"
 		android:id="@+id/loadFromEEPROM"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
@@ -53,6 +54,7 @@
 		android:layout_toRightOf="@+id/loadFromFile"
 		android:text="Load EEPROM" />
 	<Button
+		android:visibility="gone"
 		android:id="@+id/saveToEEPROM"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"

@@ -61,6 +61,43 @@ namespace TempModTest
         private System.Timers.Timer timer = null;
         int messageCount = 0;
 
+        struct FormulaItem
+        {
+            public double ta;
+            public List<double[]> args;
+        }
+        List<FormulaItem> mFormula = getFixedFormula();
+
+        struct Matrix
+        {
+            public int startRow;
+            public int startCol;
+            public int rowCount;
+            public int colCount;
+        };
+
+        struct Formula2Item
+        {
+            public double ta;
+            public double arg1;
+            public double arg2;
+            public double arg3;
+            public double arg4;
+            public double arg5;
+            public double arg6;
+            public double arg7;
+        };
+
+        struct Formula2
+        {
+            public double taForMatrix;
+            public Matrix lowMatrix;
+            public Matrix highMatrix;
+            public List<Formula2Item> entries;
+        }
+
+        Formula2 mFormula2 = getFixedFormula2();
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             Log.Info(TAG, "OnCreate");
@@ -88,7 +125,8 @@ namespace TempModTest
             btnLoadFromEEPROM = FindViewById<Button>(Resource.Id.loadFromEEPROM);
             btnSaveToEEPROM = FindViewById<Button>(Resource.Id.saveToEEPROM);
 
-            loadFormulaFromFile();
+            //loadFormulaFromFile();
+            loadFormula2FromFile();
 
             btnStart.Click += delegate
             {
@@ -109,7 +147,8 @@ namespace TempModTest
 
             btnLoadFromFile.Click += delegate
             {
-                loadFormulaFromFile();
+                //loadFormulaFromFile();
+                loadFormula2FromFile();
             };
 
             btnLoadFromEEPROM.Click += delegate
@@ -200,6 +239,92 @@ namespace TempModTest
             catch
             {
 
+            }
+        }
+
+        void loadFormula2FromFile()
+        {
+            try
+            {
+                Context context = Application.Context;
+                Java.IO.File[] dirs = context.GetExternalFilesDirs(null);
+                string sdCardPath = null;
+                foreach (Java.IO.File folder in dirs)
+                {
+                    bool isRemovable = Android.OS.Environment.InvokeIsExternalStorageRemovable(folder);
+                    bool isEmulated = Android.OS.Environment.InvokeIsExternalStorageEmulated(folder);
+
+                    if (isRemovable && !isEmulated)
+                    {
+                        sdCardPath = folder.Path.Split("/Android")[0];
+                        break;
+                    }
+                }
+                if (sdCardPath != null)
+                {
+                    var filePath = System.IO.Path.Combine(sdCardPath, "formula2.txt");
+                    if (Directory.Exists(sdCardPath))
+                    {
+                        StreamReader sr = new StreamReader(filePath);
+                        string line;
+                        Formula2 f = new Formula2();
+                        line = sr.ReadLine();
+                        if (line == null)
+                        {
+                            Toast.MakeText(Application.Context, "Failed to load formula from formula2.txt on SD Card", ToastLength.Long).Show();
+                            return;
+                        }
+                        string[] subs = line.Trim().Split(",");
+                        if(subs.Length != 9)
+                        {
+                            Toast.MakeText(Application.Context, "Incorrect format in line 1 of formula2.txt on SD Card", ToastLength.Long).Show();
+                        }
+                        double[] doubles = Array.ConvertAll(subs, Double.Parse);
+                        f.taForMatrix = doubles[0];
+                        Matrix m = new Matrix();
+                        m.startRow = (int)doubles[1];
+                        m.startCol = (int)doubles[2];
+                        m.rowCount = (int)doubles[3];
+                        m.colCount = (int)doubles[4];
+                        f.lowMatrix = m;
+                        m = new Matrix();
+                        m.startRow = (int)doubles[5];
+                        m.startCol = (int)doubles[6];
+                        m.rowCount = (int)doubles[7];
+                        m.colCount = (int)doubles[8];
+                        f.highMatrix = m;
+                        f.entries = new List<Formula2Item>();
+
+                        while ((line = sr.ReadLine()) != null)
+                        {
+                            line = line.Trim();
+                            if ("".Equals(line))
+                                continue;
+                            subs = line.Split(",");
+                            if (subs.Length == 8)
+                            {
+                                doubles = Array.ConvertAll(subs, Double.Parse);
+                                Formula2Item e = new Formula2Item();
+                                e.ta = doubles[0];
+                                e.arg1 = doubles[1];
+                                e.arg2 = doubles[2];
+                                e.arg3 = doubles[3];
+                                e.arg4 = doubles[4];
+                                e.arg5 = doubles[5];
+                                e.arg6 = doubles[6];
+                                e.arg7 = doubles[7];
+                                f.entries.Add(e);
+                            }
+                        }
+
+                        mFormula2 = f;
+                        Toast.MakeText(Application.Context, "Loaded formula2 from formula2.txt on SD Card", ToastLength.Long).Show();
+                    }
+                }
+            }
+            catch
+            {
+                Toast.MakeText(Application.Context, "Unable to load formula2 from formula2.txt on SD Card", ToastLength.Long).Show();
             }
         }
 
@@ -308,8 +433,8 @@ namespace TempModTest
                 await Task.Delay(200);
                 WriteData(initdata);
                 await Task.Delay(200);
-                //switchOperation(OPERATION.IDLE);
-                onBtnLoadFromEEPROM();
+                switchOperation(OPERATION.IDLE);
+                //onBtnLoadFromEEPROM();
             }
             catch (Java.IO.IOException e)
             {
@@ -415,18 +540,18 @@ namespace TempModTest
             int startRow = 5, startCol = 5, rowCount = 6, colCount = 6;
 
             //use new matrix 
-            if(ambient < 30)
+            if(ambientTemp < mFormula2.taForMatrix)
             {
-                startRow = 7;
-                startCol = 7;
-                rowCount = 2;
-                colCount = 4;
+                startRow = mFormula2.lowMatrix.startRow;
+                startCol = mFormula2.lowMatrix.startCol;
+                rowCount = mFormula2.lowMatrix.rowCount;
+                colCount = mFormula2.lowMatrix.colCount;
             } else
             {
-                startRow = 7;
-                startCol = 8;
-                rowCount = 2;
-                colCount = 2;
+                startRow = mFormula2.highMatrix.startRow;
+                startCol = mFormula2.highMatrix.startCol;
+                rowCount = mFormula2.highMatrix.rowCount;
+                colCount = mFormula2.highMatrix.colCount;
             }
             //end use new matrix
 
@@ -443,7 +568,9 @@ namespace TempModTest
             }
             
             double maxCenterTemp = data2Temp(maxCenter);
-            double adjustedTemp = adjustTemp(maxCenterTemp, ambientTemp);
+            //double adjustedTemp = adjustTemp(maxCenterTemp, ambientTemp);
+            //double adjustedTemp = adjustTemp_alg0710(maxCenterTemp, ambientTemp);
+            double adjustedTemp = adjustTemp_formula2(maxCenterTemp, ambientTemp);
 
             string message = String.Format("{0:0.00}, {1:0.00}, {2:0.00}, {3:HH:mm:ss tt}\n", ambientTemp, maxCenterTemp, adjustedTemp, DateTime.Now);
             messageCount++;
@@ -488,12 +615,6 @@ namespace TempModTest
             {
 
             }
-        }
-
-        struct FormulaItem
-        {
-            public double ta;
-            public List<double[]> args;
         }
 
         short doubleToShort(double v)
@@ -618,6 +739,87 @@ namespace TempModTest
             return formula;
         }
 
+        static Formula2 getFixedFormula2()
+        {
+            Formula2 f = new Formula2();
+            f.taForMatrix = 30.0;
+            Matrix m = new Matrix();
+            m.startRow = 5;
+            m.startCol = 5;
+            m.rowCount = 6;
+            m.colCount = 6;
+            f.lowMatrix = m;
+            m = new Matrix();
+            m.startRow = 5;
+            m.startCol = 5;
+            m.rowCount = 6;
+            m.colCount = 6;
+            f.highMatrix = m;
+            List<Formula2Item> l = new List<Formula2Item>();
+            Formula2Item e = new Formula2Item();
+            e.ta = 25;
+            e.arg1 = 34.84;
+            e.arg2 = 0.148;
+            e.arg3 = -25.0;
+            e.arg4 = 32.66;
+            e.arg5 = 0.186;
+            e.arg6 = -25.0;
+            e.arg7 = 0.0;
+            l.Add(e);
+            e = new Formula2Item();
+            e.ta = 29;
+            e.arg1 = 34.84;
+            e.arg2 = 0.100;
+            e.arg3 = 10.0;
+            e.arg4 = 32.66;
+            e.arg5 = 0.086;
+            e.arg6 = 10.0;
+            e.arg7 = 0.0;
+            l.Add(e);
+            e = new Formula2Item();
+            e.ta = 32; 
+            e.arg1 = 34.84; 
+            e.arg2 = 0.100; 
+            e.arg3 = 35.0; 
+            e.arg4 = 32.66; 
+            e.arg5 = 0.086; 
+            e.arg6 = 35.0; 
+            e.arg7 = -0.2;
+            l.Add(e);
+            e = new Formula2Item();
+            e.ta = 35; 
+            e.arg1 = 34.84; 
+            e.arg2 = 0.100; 
+            e.arg3 = 65.0; 
+            e.arg4 = 32.66; 
+            e.arg5 = 0.086; 
+            e.arg6 = 65.0; 
+            e.arg7 = 0.0;
+            l.Add(e);
+            e = new Formula2Item();
+            e.ta = 38; 
+            e.arg1 = 34.84; 
+            e.arg2 = 0.100; 
+            e.arg3 = 85.0; 
+            e.arg4 = 32.66; 
+            e.arg5 = 0.086; 
+            e.arg6 = 85.0; 
+            e.arg7 = 0.1;
+            l.Add(e);
+            e = new Formula2Item();
+            e.ta = 10000;
+            e.arg1 = 34.84; 
+            e.arg2 = 0.100; 
+            e.arg3 = 100.0; 
+            e.arg4 = 32.66; 
+            e.arg5 = 0.086; 
+            e.arg6 = 100.0; 
+            e.arg7 = 0.1;
+            l.Add(e);
+            f.entries = l;
+            return f;
+        }
+
         static List<FormulaItem> getFixedFormula()
         {
             List<FormulaItem> formula = new List<FormulaItem>();
@@ -665,7 +867,145 @@ namespace TempModTest
             return formula;
         }
 
-        List<FormulaItem> mFormula = getFixedFormula();
+        double adjustTemp_formula2(double InValue, double TA)
+        {
+            double tmp0 = 0;
+            double tahigh0 = 0;
+            double talow0 = 0;
+
+            foreach(Formula2Item e in mFormula2.entries)
+            {
+                if(TA <= e.ta)
+                {
+                    tahigh0 = (double)(e.arg1 + e.arg2 * (TA + e.arg3));
+                    talow0 = (double)(e.arg4 + e.arg5 * (TA + e.arg6));
+
+                    if (InValue > tahigh0)
+                    {
+                        tmp0 = (double)(36.8 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
+                    }
+                    else if (InValue < talow0)
+                    {
+                        tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
+                    }
+                    else if ((InValue <= tahigh0) && (InValue >= talow0))
+                    {
+                        tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
+                    }
+                    tmp0 = tmp0 + e.arg7;
+                    break;
+                }
+            }
+            return tmp0;
+        }
+
+        double adjustTemp_alg0710(double InValue, double TA)
+        {
+            double tmp0 = 0;
+            double tahigh0 = 0;
+            double talow0 = 0;
+
+            if (TA <= 25)
+            {
+                tahigh0 = (double)(34.84 + 0.148 * (TA - 30.0));
+                talow0 = (double)(32.66 + 0.186 * (TA - 30.0));
+
+                if (InValue > tahigh0)
+                {
+                    tmp0 = (double)(36.8 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
+                }
+                else if (InValue < talow0)
+                {
+                    tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
+                }
+                else if ((InValue <= tahigh0) && (InValue >= talow0))
+                {
+                    tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
+                }
+                tmp0 = tmp0 + 0.2;
+            }
+
+            else if ((TA > 25) && (TA < 30))
+            {
+                tahigh0 = (double)(34.84 + 0.100 * (TA - 50.0));
+                talow0 = (double)(32.66 + 0.086 * (TA - 50.0));
+
+                if (InValue > tahigh0)
+                {
+                    tmp0 = (double)(36.8 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
+                }
+                else if (InValue < talow0)
+                {
+                    tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
+                }
+                else if ((InValue <= tahigh0) && (InValue >= talow0))
+                {
+                    tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
+                }
+                tmp0 = tmp0 - 0.2;
+            }
+
+            else if ((TA >= 30) && (TA < 33))
+            {
+                tahigh0 = (double)(34.84 + 0.100 * (TA - 30.0));
+                talow0 = (double)(32.66 + 0.086 * (TA - 30.0));
+
+                if (InValue > tahigh0)
+                {
+                    tmp0 = (double)(36.8 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
+                }
+                else if (InValue < talow0)
+                {
+                    tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
+                }
+                else if ((InValue <= tahigh0) && (InValue >= talow0))
+                {
+                    tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
+                }
+                tmp0 = tmp0 - 0.0;
+            }
+
+            else if ((TA >= 33) && (TA < 35))
+            {
+                tahigh0 = (double)(34.84 + 0.100 * (TA - 20.0));
+                talow0 = (double)(32.66 + 0.086 * (TA - 20.0));
+
+                if (InValue > tahigh0)
+                {
+                    tmp0 = (double)(36.8 + (0.82932061781586 + 0.0023644335442161 * TA) * (InValue - tahigh0));
+                }
+                else if (InValue < talow0)
+                {
+                    tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
+                }
+                else if ((InValue <= tahigh0) && (InValue >= talow0))
+                {
+                    tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
+                }
+                tmp0 = tmp0 - 0.0;
+            }
+
+            else if (TA >= 35)
+            {
+                tahigh0 = (double)(34.84 + 0.100 * (TA - 15.0));
+                talow0 = (double)(32.66 + 0.086 * (TA - 15.0));
+
+                if (InValue > tahigh0)
+                {
+                    tmp0 = (double)(36.8 + (0.82932061781586 + 0.0023644335442161 * TA) * (InValue - tahigh0));
+                }
+                else if (InValue < talow0)
+                {
+                    tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
+                }
+                else if ((InValue <= tahigh0) && (InValue >= talow0))
+                {
+                    tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
+                }
+                tmp0 = tmp0 - 0.0;
+            }
+            return tmp0;
+        }
 
         double adjustTemp(double TB, double TA)
         {
@@ -697,732 +1037,5 @@ namespace TempModTest
             }
             return tmp0;
         }
-
-        double adjustTemp_fixed(double TB, double TA)
-        {
-            double tmp0 = 0;
-            if (36.5 <= TA)
-            {
-                if (46.5 <= TB)
-                    tmp0 = (105.0 / 256.0) * TB + 19.92;
-                else if (44.5 <= TB)
-                    tmp0 = (210.0 / 256.0) * TB + 0.82;
-                else if (42.5 <= TB)
-                    tmp0 = (40.0 / 256.0) * TB + 30.2;
-                else if (40.5 <= TB)
-                    tmp0 = (58.0 / 256.0) * TB + 27.2;
-                else
-                    tmp0 = (35.0 / 256.0) * TB + 30.83;
-            } else if (31 <= TA)
-            {
-                if (41.5 <= TB)
-                    tmp0 = (220.0 / 256.0) * TB + 1.42;
-                else if (40.5 <= TB)
-                    tmp0 = (60.0 / 256.0) * TB + 27.28;
-                else if (39.5 <= TB)
-                    tmp0 = (56.0 / 256.0) * TB + 28;
-                else if (38.5 <= TB)
-                    tmp0 = (38.0 / 256.0) * TB + 30.56;
-                else
-                    tmp0 = (70.0 / 256.0) * TB + 25.88;
-            } else if (27 <= TA)
-            {
-                if (39.5 <= TB)
-                    tmp0 = (100.0 / 256.0) * TB + 23.45;
-                else if (38.5 <= TB)
-                    tmp0 = (130.0 / 256.0) * TB + 18.79;
-                else if (37.5 <= TB)
-                    tmp0 = (250.0 / 256.0) * TB + 0.7;
-                else if (36.5 <= TB)
-                    tmp0 = (58.0 / 256.0) * TB + 28.71;
-                else if (35.5 <= TB)
-                    tmp0 = (38.0 / 256.0) * TB + 31.52;
-                else
-                    tmp0 = (71.0 / 256.0) * TB + 26.83;
-            } else if (19 <= TA)
-            {
-                if (36.5 <= TB)
-                    tmp0 = (130.0 / 256.0) * TB + 19.12;
-                else if (34.5 <= TB)
-                    tmp0 = (89.0 / 256.0) * TB + 24.95;
-                else if (32.5 <= TB)
-                    tmp0 = (60.0 / 256.0) * TB + 28.85;
-                else if (31.5 <= TB)
-                    tmp0 = (58.0 / 256.0) * TB + 29.1;
-                else
-                    tmp0 = (90.0 / 256.0) * TB + 25.15;
-            } else if (10 <= TA)
-            {
-                if (36.5 <= TB)
-                    tmp0 = (200.0 / 256.0) * TB + 9.13;
-                else if (34.5 <= TB)
-                    tmp0 = (100.0 / 256.0) * TB + 23.39;
-                else if (32.5 <= TB)
-                    tmp0 = (51.0 / 256.0) * TB + 29.99;
-                else if (31.5 <= TB)
-                    tmp0 = (58.0 / 256.0) * TB + 29.1;
-                else
-                    tmp0 = (80.0 / 256.0) * TB + 26.45;
-            }
-
-            return tmp0;
-        }
-        //double adjustTemp(double InValue, double TA)
-        //{
-
-        //    double tmp0 = 0;
-        //    double tmp1 = 0;
-
-        //    if ((TA >= 27.0) && (TA < 31.0))
-        //    {
-        //        do
-        //        {
-
-        //            if ((InValue >= 38.5) && (InValue < 39.5))
-        //            {
-        //                tmp0 = (200.0 / 256.0) * InValue + 6.45;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 37.5) && (InValue < 38.5))
-        //            {
-        //                tmp0 = (40.0 / 256.0) * InValue + 30.66;
-        //                break;
-        //            }
-
-        //            if ((InValue < 37.5) && (InValue >= 36.5))
-        //            {
-        //                tmp0 = (58.0 / 256.0) * InValue + 28.2;
-        //                break;
-        //            }
-
-        //            if ((InValue < 36.5) && (InValue >= 35.5))
-        //            {
-        //                tmp0 = (35.0 / 256.0) * InValue + 31.55;
-        //                break;
-        //            }
-
-        //            if (InValue < 35.5)
-        //            {
-        //                tmp0 = (39.0 / 256.0) * InValue + 31.1;
-        //                break;
-        //            }
-
-        //            if (InValue >= 39.5)
-        //            {
-        //                tmp0 = (40.0 / 256.0) * InValue + 31.39;
-        //                break;
-        //            }
-
-
-        //        } while (false);
-
-        //        return tmp0;
-        //    }
-
-        //    if (TA >= 31)
-        //    {
-        //        do
-        //        {
-
-        //            if (InValue >= 41.5)
-        //            {
-        //                tmp0 = (220.0 / 256.0) * InValue + 1.42;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 40.5) && (InValue < 41.5))
-        //            {
-        //                tmp0 = (60.0 / 256.0) * InValue + 27.28;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 39.5) && (InValue < 40.5))
-        //            {
-        //                tmp0 = (56.0 / 256.0) * InValue + 28;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 38.5) && (InValue < 39.5))
-        //            {
-        //                tmp0 = (38.0 / 256.0) * InValue + 30.56;
-        //                break;
-        //            }
-
-        //            if (InValue < 38.5)
-        //            {
-        //                tmp0 = (70.0 / 256.0) * InValue + 25.88;
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0;
-        //    }
-
-        //    if ((TA < 27) && (TA >= 19))
-        //    {
-        //        do
-        //        {
-
-        //            if (InValue < 31.5)
-        //            {
-        //                tmp0 = (80.0 / 256.0) * InValue + 26.71;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 31.5) && (InValue < 32.5))
-        //            {
-        //                tmp0 = (58.0 / 256.0) * InValue + 29.1;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 32.5) && (InValue < 34.5))
-        //            {
-        //                tmp0 = (61.0 / 256.0) * InValue + 28.5;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 34.5) && (InValue < 36.5))
-        //            {
-        //                tmp0 = (90.0 / 256.0) * InValue + 24.37;
-        //                break;
-        //            }
-        //            if (InValue >= 36.5)
-        //            {
-        //                tmp0 = (245.0 / 256.0) * InValue + 2.35;
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0;
-        //    }
-
-        //    if ((TA < 19) && (TA >= 10))
-        //    {
-        //        do
-        //        {
-
-        //            if (InValue < 31.5)
-        //            {
-        //                tmp0 = (80.0 / 256.0) * InValue + 6.58;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 31.5) && (InValue < 32.5))
-        //            {
-        //                tmp0 = (58.0 / 256.0) * InValue + 29.03;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 32.5) && (InValue < 34.5))
-        //            {
-        //                tmp0 = (51.0 / 256.0) * InValue + 28.45;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 34.5) && (InValue < 35.5))
-        //            {
-        //                tmp0 = (190.0 / 256.0) * InValue + 10.99;
-        //                break;
-        //            }
-
-        //            if (InValue >= 35.5)
-        //            {
-        //                tmp0 = (245.0 / 256.0) * InValue + 2.23;
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0;
-        //    }
-
-
-        //    return 0;
-        //}
-
-        //double adjustTemp(double InValue, double TA)
-        //{
-
-        //    double tmp0 = 0;
-        //    double tmp1 = 0;
-
-        //    if ((TA >= 27.0) && (TA < 34.0))
-        //    {
-        //        do
-        //        {
-
-        //            if ((InValue >= 38.5) && (InValue < 39.5))
-        //            {
-        //                tmp0 = (200.0 / 256.0) * InValue + 6.05;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 37.5) && (InValue < 38.5))
-        //            {
-        //                tmp0 = (40.0 / 256.0) * InValue + 30.66;
-        //                break;
-        //            }
-
-        //            if ((InValue < 37.5) && (InValue >= 36.5))
-        //            {
-        //                tmp0 = (58.0 / 256.0) * InValue + 28.2;
-        //                break;
-        //            }
-
-        //            if ((InValue < 36.5) && (InValue >= 35.5))
-        //            {
-        //                tmp0 = (35.0 / 256.0) * InValue + 31.55;
-        //                break;
-        //            }
-
-        //            if ((InValue < 35.5) && (InValue >= 34.5))
-        //            {
-        //                tmp0 = (39 / 256.0) * InValue + 31.55;
-        //                break;
-        //            }
-        //            if ((InValue < 36.5) && (InValue >= 35.5))
-        //            {
-        //                tmp0 = (35.0 / 256.0) * InValue + 31.55;
-        //                break;
-        //            }
-
-        //            if (InValue < 32.5)
-        //            {
-        //                tmp0 = (80.0 / 256.0) * InValue + 26.61;
-        //                break;
-        //            }
-
-        //            if (InValue >= 39.5)
-        //            {
-        //                tmp0 = (40.0 / 256.0) * InValue + 31.39;
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0;
-        //    }
-
-        //    if (TA >= 34)
-        //    {
-        //        do
-        //        {
-
-        //            if (InValue >= 41.5)
-        //            {
-        //                tmp0 = (220.0 / 256.0) * InValue + 0.5;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 40.5) && (InValue < 41.5))
-        //            {
-        //                tmp0 = (60.0 / 256.0) * InValue + 26.88;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 39.5) && (InValue < 40.5))
-        //            {
-        //                tmp0 = (56.0 / 256.0) * InValue + 27.8;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 38.5) && (InValue < 39.5))
-        //            {
-        //                tmp0 = (38.0 / 256.0) * InValue + 30.56;
-        //                break;
-        //            }
-        //            if ((InValue >= 37.5) && (InValue < 38.5))
-        //            {
-        //                tmp0 = (70.0 / 256.0) * InValue + 25.98;
-        //                break;
-        //            }
-
-        //            if (InValue < 37.5)
-        //            {
-        //                tmp0 = (70.0 / 256.0) * InValue + 26.78;
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0;
-        //    }
-
-        //    if ((TA < 27) && (TA >= 19))
-        //    {
-        //        do
-        //        {
-
-        //            if (InValue < 31.5)
-        //            {
-        //                tmp0 = (80.0 / 256.0) * InValue + 26.71;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 31.5) && (InValue < 32.5))
-        //            {
-        //                tmp0 = (58.0 / 256.0) * InValue + 29.1;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 32.5) && (InValue < 34.5))
-        //            {
-        //                tmp0 = (61.0 / 256.0) * InValue + 28.5;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 34.5) && (InValue < 36.5))
-        //            {
-        //                tmp0 = (90.0 / 256.0) * InValue + 24.37;
-        //                break;
-        //            }
-        //            if (InValue >= 36.5)
-        //            {
-        //                tmp0 = (245.0 / 256.0) * InValue + 2.35;
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0;
-        //    }
-
-        //    if ((TA < 19) && (TA >= 10))
-        //    {
-        //        do
-        //        {
-
-        //            if (InValue < 31.5)
-        //            {
-        //                tmp0 = (80.0 / 256.0) * InValue + 6.58;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 31.5) && (InValue < 32.5))
-        //            {
-        //                tmp0 = (58.0 / 256.0) * InValue + 29.03;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 32.5) && (InValue < 34.5))
-        //            {
-        //                tmp0 = (51.0 / 256.0) * InValue + 28.45;
-        //                break;
-        //            }
-
-        //            if ((InValue >= 34.5) && (InValue < 35.5))
-        //            {
-        //                tmp0 = (190.0 / 256.0) * InValue + 10.99;
-        //                break;
-        //            }
-
-        //            if (InValue >= 35.5)
-        //            {
-        //                tmp0 = (245.0 / 256.0) * InValue + 2.23;
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0;
-        //    }
-
-
-        //    return 0;
-        //}
-
-        //double adjustTemp(double InValue, double TA)
-        //{
-        //    double tmp0 = 0;
-        //    double tahigh0 = 0;
-        //    double talow0 = 0;
-
-        //    if (TA <= 27.5 && InValue > 36.5)
-        //    {
-        //        tahigh0 = (double)(34.84 + 0.148 * (TA - 25.0));
-        //        talow0 = (double)(32.66 + 0.186 * (TA - 25.0));
-
-        //        do
-        //        {
-
-        //            if (InValue > tahigh0)
-        //            {
-        //                tmp0 = (double)(36.8 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
-        //                break;
-        //            }
-
-        //            else if (InValue < talow0)
-        //            {
-        //                tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
-        //                break;
-        //            }
-
-        //            else if ((InValue <= tahigh0) && (InValue >= talow0))
-        //            {
-        //                tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0 = tmp0 - 1.5;
-        //    }
-
-        //    if ((TA < 27.5) && (TA >= 19) && (InValue <= 36.5))
-        //    {
-        //        do
-        //        {
-
-        //            if (InValue < 31.5)
-        //            {
-        //                tmp0 = (double)((90.0 / 256.0) * InValue + 25.15);
-        //                break;
-        //            }
-
-        //            if ((InValue >= 31.5) && (InValue < 32.5))
-        //            {
-        //                tmp0 = (double)((58.0 / 256.0) * InValue + 29.10);
-        //                break;
-        //            }
-
-        //            if ((InValue >= 32.5) && (InValue < 34.5))
-        //            {
-        //                tmp0 = (double)((60.0 / 256.0) * InValue + 28.85);
-        //                break;
-        //            }
-
-        //            if ((InValue >= 34.5) && (InValue < 36.5))
-        //            {
-        //                tmp0 = (double)((89.0 / 256.0) * InValue + 24.95);
-        //                break;
-        //            }
-        //            if (InValue >= 36.5)
-        //            {
-        //                tmp0 = (double)((130.0 / 256.0) * InValue + 19.12);
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0 = tmp0 - 0.6;
-        //    }
-
-        //    if ((TA > 27.5) && (TA <= 31.5) && (InValue >= 39.5))
-        //    {
-        //        tahigh0 = (double)(34.84 + 0.1 * (TA - 25.0));
-        //        talow0 = (double)(32.66 + 0.086 * (TA - 25.0));
-
-        //        do
-        //        {
-
-        //            if (InValue > tahigh0)
-        //            {
-        //                tmp0 = (double)(36.8 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
-        //                break;
-        //            }
-
-        //            else if (InValue < talow0)
-        //            {
-        //                tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
-        //                break;
-        //            }
-
-        //            else if ((InValue <= tahigh0) && (InValue >= talow0))
-        //            {
-        //                tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0 = tmp0 - 4.5;
-        //    }
-
-        //    if ((TA > 27.5) && (TA <= 31.5) && (InValue < 39.5))
-        //    {
-        //        do
-        //        {
-
-        //            if (InValue < 35.5)
-        //            {
-        //                tmp0 = (double)((69.0 / 256.0) * InValue + 26.83);
-        //                break;
-        //            }
-
-        //            else if ((InValue < 36.5) && (InValue >= 35.5))
-        //            {
-        //                tmp0 = (double)((35.0 / 256.0) * InValue + 31.55);
-        //                break;
-        //            }
-
-        //            else if ((InValue < 37.5) && (InValue >= 36.5))
-        //            {
-        //                tmp0 = (double)((58.0 / 256.0) * InValue + 28.2);
-        //                break;
-        //            }
-
-        //            else if ((InValue < 38.5) && (InValue >= 37.5))
-        //            {
-        //                tmp0 = (double)((40.0 / 256.0) * InValue + 30.81);
-        //                break;
-        //            }
-
-        //            else if ((InValue < 39.5) && (InValue >= 38.5))
-        //            {
-        //                tmp0 = (double)((130.0 / 256.0) * InValue + 16.78);
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0 = tmp0 - 0.0;
-        //    }
-
-        //    if ((TA > 31.5) && (TA <= 36.5) && (InValue < 41.5))
-        //    {
-        //        do
-        //        {
-
-        //            if (InValue < 38.5)
-        //            {
-        //                tmp0 = (double)((70.0 / 256.0) * InValue + 25.88);
-        //                break;
-        //            }
-
-        //            if ((InValue < 38.5) && (InValue >= 39.5))
-        //            {
-        //                tmp0 = (double)((38.0 / 256.0) * InValue + 30.56);
-        //                break;
-        //            }
-
-        //            if ((InValue < 39.5) && (InValue >= 40.5))
-        //            {
-        //                tmp0 = (double)((56.0 / 256.0) * InValue + 28.0);
-        //                break;
-        //            }
-
-        //            if ((InValue < 40.5) && (InValue >= 41.5))
-        //            {
-        //                tmp0 = (double)((60.0 / 256.0) * InValue + 27.28);
-        //                break;
-        //            }
-
-        //            if (InValue >= 41.5)
-        //            {
-        //                tmp0 = (double)((220.0 / 256.0) * InValue + 1.42);
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0 = tmp0 - 0.0;
-        //    }
-
-        //    if ((TA > 31.5) && (TA <= 36.5) && (InValue >= 41.5))
-        //    {
-        //        tahigh0 = (double)(34.84 + 0.1 * (TA - 25.0));
-        //        talow0 = (double)(32.66 + 0.086 * (TA - 25.0));
-
-        //        do
-        //        {
-
-        //            if (InValue > tahigh0)
-        //            {
-        //                tmp0 = (double)(36.8 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
-        //                break;
-        //            }
-
-        //            else if (InValue < talow0)
-        //            {
-        //                tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
-        //                break;
-        //            }
-
-        //            else if ((InValue <= tahigh0) && (InValue >= talow0))
-        //            {
-        //                tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0 = tmp0 - 4.5;
-        //    }
-
-        //    if (TA >= 36.5 && InValue < 46.5)
-        //    {
-        //        do
-        //        {
-
-        //            if (InValue >= 40.5)
-        //            {
-        //                tmp0 = (double)((35.0 / 256.0) * InValue + 30.83);
-        //                break;
-        //            }
-
-        //            if ((InValue >= 40.5) && (InValue < 42.5))
-        //            {
-        //                tmp0 = (double)((58.0 / 256.0) * InValue + 27.2);
-        //                break;
-        //            }
-
-        //            if ((InValue >= 42.5) && (InValue < 44.5))
-        //            {
-        //                tmp0 = (double)((40.0 / 256.0) * InValue + 30.0);
-        //                break;
-        //            }
-
-        //            if ((InValue >= 44.5) && (InValue < 46.5))
-        //            {
-        //                tmp0 = (double)((130.0 / 256.0) * InValue + 14.41);
-        //                break;
-        //            }
-
-        //            if (InValue < 46.5)
-        //            {
-        //                tmp0 = (double)((100.0 / 256.0) * InValue + 19.92);
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0 = tmp0 - 0.0;
-        //    }
-
-        //    if (TA > 36.5 && InValue >= 46.5)
-        //    {
-        //        tahigh0 = (double)(34.84 + 0.1 * (TA - 25.0));
-        //        talow0 = (double)(32.66 + 0.086 * (TA - 25.0));
-
-        //        do
-        //        {
-
-        //            if (InValue > tahigh0)
-        //            {
-        //                tmp0 = (double)(36.8 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
-        //                break;
-        //            }
-
-        //            else if (InValue < talow0)
-        //            {
-        //                tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
-        //                break;
-        //            }
-
-        //            else if ((InValue <= tahigh0) && (InValue >= talow0))
-        //            {
-        //                tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
-        //                break;
-        //            }
-
-        //        } while (false);
-
-        //        return tmp0 = tmp0 - 9.7;
-        //    }
-        //    return 0;
-        //}
     }
 }
