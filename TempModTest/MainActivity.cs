@@ -41,7 +41,7 @@ using Hoho.Android.UsbSerial.Util;
 
 namespace TempModTest
 {
-    [Activity(Label = "TempModTest v1.0.1n", MainLauncher = true, Icon = "@drawable/icon")]
+    [Activity(Label = "@string/app_name", MainLauncher = true, Icon = "@drawable/icon")]
     [IntentFilter(new[] { UsbManager.ActionUsbDeviceAttached })]
     [MetaData(UsbManager.ActionUsbDeviceAttached, Resource = "@xml/device_filter")]
     public class MainActivity : Activity
@@ -86,8 +86,9 @@ namespace TempModTest
             await PopulateListAsync();
 
             //register the broadcast receivers
-            //detachedReceiver = new UsbDeviceDetachedReceiver(this);
-            //RegisterReceiver(detachedReceiver, new IntentFilter(UsbManager.ActionUsbDeviceDetached));
+            detachedReceiver = new UsbDeviceDetachedReceiver(this);
+            RegisterReceiver(detachedReceiver, new IntentFilter(UsbManager.ActionUsbDeviceDetached));
+            RegisterReceiver(detachedReceiver, new IntentFilter(UsbManager.ActionUsbDeviceAttached));
         }
         protected override void OnPause()
         {
@@ -161,6 +162,11 @@ namespace TempModTest
             progressBarTitle.Text = string.Format("{0} device{1} found", adapter.Count, adapter.Count == 1 ? string.Empty : "s");
             HideProgressBar();
             Log.Info(TAG, "Done refreshing, " + adapter.Count + " entries found.");
+
+            if(adapter.Count > 0)
+            {
+                listView.PerformItemClick(listView.GetChildAt(0), 0, listView.GetItemIdAtPosition(0));
+            }
         }
 
         void ShowProgressBar()

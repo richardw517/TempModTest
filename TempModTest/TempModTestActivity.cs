@@ -418,7 +418,8 @@ namespace TempModTest
                 });
             };
             serialIoManager.ErrorReceived += (sender, e) => {
-                RunOnUiThread(() => {
+                RunOnUiThread(async () => {
+                    await Task.Delay(1000);
                     var intent = new Intent(this, typeof(MainActivity));
                     StartActivity(intent);
                 });
