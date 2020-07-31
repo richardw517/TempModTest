@@ -293,7 +293,8 @@ namespace TempModTest
                 });
             };
             serialIoManager.ErrorReceived += (sender, e) => {
-                RunOnUiThread(() => {
+                RunOnUiThread(async () => {
+                    await Task.Delay(1000);
                     var intent = new Intent(this, typeof(MainActivity));
                     StartActivity(intent);
                 });
@@ -310,6 +311,7 @@ namespace TempModTest
                 await Task.Delay(200);
                 //switchOperation(OPERATION.IDLE);
                 onBtnLoadFromEEPROM();
+                btnStart.PerformClick();
             }
             catch (Java.IO.IOException e)
             {
