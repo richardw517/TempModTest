@@ -436,6 +436,7 @@ namespace TempModTest
                 await Task.Delay(200);
                 switchOperation(OPERATION.IDLE);
                 //onBtnLoadFromEEPROM();
+                btnStart.PerformClick();
             }
             catch (Java.IO.IOException e)
             {
