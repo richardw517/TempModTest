@@ -86,6 +86,9 @@ namespace TempModTest
             public double arg5;
             public double arg6;
             public double arg7;
+            public double arg8;
+            public double arg9;
+            public double arg10;
         };
 
         struct Formula2
@@ -301,7 +304,7 @@ namespace TempModTest
                             if ("".Equals(line))
                                 continue;
                             subs = line.Split(",");
-                            if (subs.Length == 8)
+                            if (subs.Length == 11)
                             {
                                 doubles = Array.ConvertAll(subs, Double.Parse);
                                 Formula2Item e = new Formula2Item();
@@ -313,6 +316,9 @@ namespace TempModTest
                                 e.arg5 = doubles[5];
                                 e.arg6 = doubles[6];
                                 e.arg7 = doubles[7];
+                                e.arg8 = doubles[8];
+                                e.arg9 = doubles[9];
+                                e.arg10 = doubles[10];
                                 f.entries.Add(e);
                             }
                         }
@@ -766,7 +772,10 @@ namespace TempModTest
             e.arg4 = 32.66;
             e.arg5 = 0.186;
             e.arg6 = -25.0;
-            e.arg7 = 0.0;
+            e.arg7 = 36.8;
+            e.arg8 = 36.3;
+            e.arg9 = 36.3;
+            e.arg10 = 0.0;
             l.Add(e);
             e = new Formula2Item();
             e.ta = 29;
@@ -776,7 +785,10 @@ namespace TempModTest
             e.arg4 = 32.66;
             e.arg5 = 0.086;
             e.arg6 = 10.0;
-            e.arg7 = 0.0;
+            e.arg7 = 36.8;
+            e.arg8 = 36.3;
+            e.arg9 = 36.3;
+            e.arg10 = 0.0;
             l.Add(e);
             e = new Formula2Item();
             e.ta = 32; 
@@ -785,8 +797,11 @@ namespace TempModTest
             e.arg3 = 35.0; 
             e.arg4 = 32.66; 
             e.arg5 = 0.086; 
-            e.arg6 = 35.0; 
-            e.arg7 = -0.2;
+            e.arg6 = 35.0;
+            e.arg7 = 36.8;
+            e.arg8 = 36.3;
+            e.arg9 = 36.3;
+            e.arg10 = -0.2;
             l.Add(e);
             e = new Formula2Item();
             e.ta = 35; 
@@ -795,8 +810,11 @@ namespace TempModTest
             e.arg3 = 65.0; 
             e.arg4 = 32.66; 
             e.arg5 = 0.086; 
-            e.arg6 = 65.0; 
-            e.arg7 = 0.0;
+            e.arg6 = 65.0;
+            e.arg7 = 36.8;
+            e.arg8 = 36.3;
+            e.arg9 = 36.3;
+            e.arg10 = 0.0;
             l.Add(e);
             e = new Formula2Item();
             e.ta = 38; 
@@ -805,8 +823,11 @@ namespace TempModTest
             e.arg3 = 85.0; 
             e.arg4 = 32.66; 
             e.arg5 = 0.086; 
-            e.arg6 = 85.0; 
-            e.arg7 = 0.1;
+            e.arg6 = 85.0;
+            e.arg7 = 36.8;
+            e.arg8 = 36.3;
+            e.arg9 = 36.3;
+            e.arg10 = 0.1;
             l.Add(e);
             e = new Formula2Item();
             e.ta = 10000;
@@ -815,8 +836,11 @@ namespace TempModTest
             e.arg3 = 100.0; 
             e.arg4 = 32.66; 
             e.arg5 = 0.086; 
-            e.arg6 = 100.0; 
-            e.arg7 = 0.1;
+            e.arg6 = 100.0;
+            e.arg7 = 36.8;
+            e.arg8 = 36.3;
+            e.arg9 = 36.3;
+            e.arg10 = 0.1;
             l.Add(e);
             f.entries = l;
             return f;
@@ -884,17 +908,17 @@ namespace TempModTest
 
                     if (InValue > tahigh0)
                     {
-                        tmp0 = (double)(36.8 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
+                        tmp0 = (double)(e.arg7 + (0.829320617815896 + 0.0023644335442161 * TA) * (InValue - tahigh0));
                     }
                     else if (InValue < talow0)
                     {
-                        tmp0 = (double)(36.3 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
+                        tmp0 = (double)(e.arg8 + (0.551658272522697 + 0.0215250684640259 * TA) * (InValue - talow0));
                     }
                     else if ((InValue <= tahigh0) && (InValue >= talow0))
                     {
-                        tmp0 = (double)(36.3 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
+                        tmp0 = (double)(e.arg9 + 0.5 / (tahigh0 - talow0) * (InValue - talow0));
                     }
-                    tmp0 = tmp0 + e.arg7;
+                    tmp0 = tmp0 + e.arg10;
                     break;
                 }
             }
