@@ -45,6 +45,7 @@ namespace TempModTest
         Button btnLoadFromFile;
         Button btnLoadFromEEPROM;
         Button btnSaveToEEPROM;
+        Button btnBackToDeviceList;
 
         enum OPERATION
         {
@@ -127,6 +128,7 @@ namespace TempModTest
             btnLoadFromFile = FindViewById<Button>(Resource.Id.loadFromFile);
             btnLoadFromEEPROM = FindViewById<Button>(Resource.Id.loadFromEEPROM);
             btnSaveToEEPROM = FindViewById<Button>(Resource.Id.saveToEEPROM);
+            btnBackToDeviceList = FindViewById<Button>(Resource.Id.backToDeviceList);
 
             //loadFormulaFromFile();
             loadFormula2FromFile();
@@ -168,6 +170,12 @@ namespace TempModTest
                     if(writeCmd != null)
                         port.Write(writeCmd, WRITE_WAIT_MILLIS);
                 }
+            };
+
+            btnBackToDeviceList.Click += delegate
+            {
+                var intent = new Intent(this, typeof(MainActivity));
+                StartActivity(intent);
             };
         }
 
@@ -444,9 +452,14 @@ namespace TempModTest
                 //onBtnLoadFromEEPROM();
                 btnStart.PerformClick();
             }
-            catch (Java.IO.IOException e)
+            catch (Exception e)
             {
                 titleTextView.Text = "Error opening device: " + e.Message;
+                RunOnUiThread(async () => {
+                    await Task.Delay(1000);
+                    var intent = new Intent(this, typeof(MainActivity));
+                    StartActivity(intent);
+                });
                 return;
             }
         }
@@ -455,7 +468,20 @@ namespace TempModTest
         {
             if (serialIoManager.IsOpen)
             {
-                port.Write(data, WRITE_WAIT_MILLIS);
+                try
+                {
+                    port.Write(data, WRITE_WAIT_MILLIS);
+                }
+                catch (Exception e)
+                {
+                    titleTextView.Text = "Error Write Data: " + e.Message;
+                    RunOnUiThread(async () => {
+                        await Task.Delay(1000);
+                        var intent = new Intent(this, typeof(MainActivity));
+                        StartActivity(intent);
+                    });
+                    return;
+                }
             }
         }
 
