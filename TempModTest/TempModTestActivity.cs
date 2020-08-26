@@ -30,6 +30,8 @@ namespace TempModTest
         const int READ_WAIT_MILLIS = 200;
         const int WRITE_WAIT_MILLIS = 200;
         const short EEPROM_SIZE = 192;
+        const short ADDR_TB_CORR = 440;
+        const short LEN_TB_CORR = 8;
 
         UsbSerialPort port;
 
@@ -46,6 +48,7 @@ namespace TempModTest
         Button btnLoadFromEEPROM;
         Button btnSaveToEEPROM;
         Button btnBackToDeviceList;
+        Button btnSaveTBCorrection;
 
         enum OPERATION
         {
@@ -54,6 +57,7 @@ namespace TempModTest
             READ,
             LOADEEPROM,
             SAVEEEPROM,
+            SAVE_TB_CORRECTION,
         };
 
         OPERATION mOperation;
@@ -89,6 +93,7 @@ namespace TempModTest
             btnLoadFromEEPROM = FindViewById<Button>(Resource.Id.loadFromEEPROM);
             btnSaveToEEPROM = FindViewById<Button>(Resource.Id.saveToEEPROM);
             btnBackToDeviceList = FindViewById<Button>(Resource.Id.backToDeviceList);
+            btnSaveTBCorrection = FindViewById<Button>(Resource.Id.saveTBCorrection);
 
             loadFormulaFromFile();
 
@@ -121,9 +126,9 @@ namespace TempModTest
 
             btnSaveToEEPROM.Click += delegate
             {
-                switchOperation(OPERATION.SAVEEEPROM);
                 if (serialIoManager.IsOpen)
                 {
+                    switchOperation(OPERATION.SAVEEEPROM);
                     byte[] writeCmd = serializeFomulaToSaveEEPROM();
                     if(writeCmd != null)
                         port.Write(writeCmd, WRITE_WAIT_MILLIS);
@@ -135,15 +140,97 @@ namespace TempModTest
                 var intent = new Intent(this, typeof(MainActivity));
                 StartActivity(intent);
             };
+
+            btnSaveTBCorrection.Click += delegate
+            {
+                double[] vals = loadTBCorrection();
+                if(vals != null)
+                {
+                    byte[] tbdata = new byte[LEN_TB_CORR + 5];
+                    tbdata[0] = 0xE1;
+                    tbdata[1] = (byte)(ADDR_TB_CORR >> 8);
+                    tbdata[2] = (byte)(ADDR_TB_CORR & 0xff);
+                    tbdata[3] = (byte)(LEN_TB_CORR >> 8);
+                    tbdata[4] = (byte)(LEN_TB_CORR & 0xff);
+                    
+                    tbdata[5] = 0x55;
+                    tbdata[6] = 0xaa;
+                    ushort v1 = (ushort)(doubleToShort(vals[0]) + 27315);
+                    tbdata[7] = (byte)(v1 >> 8);
+                    tbdata[8] = (byte)(v1 & 0xff);
+                    ushort v2 = (ushort)(doubleToShort(vals[1]) + 27315);
+                    tbdata[9] = (byte)(v2 >> 8);
+                    tbdata[10] = (byte)(v2 & 0xff);
+                    short v3 = doubleToShort(vals[2]);
+                    tbdata[11] = (byte)(v3 >> 8);
+                    tbdata[12] = (byte)(v3 & 0xff);
+
+                    if (serialIoManager.IsOpen)
+                    {
+                        switchOperation(OPERATION.SAVE_TB_CORRECTION);
+                        port.Write(tbdata, WRITE_WAIT_MILLIS);
+                    }
+                    
+                }
+            };
         }
 
         void onBtnLoadFromEEPROM()
         {
-            switchOperation(OPERATION.LOADEEPROM);
             if (serialIoManager.IsOpen)
             {
+                switchOperation(OPERATION.LOADEEPROM);
                 port.Write(loadEEPROM, WRITE_WAIT_MILLIS);
             }
+        }
+
+        double[] loadTBCorrection()
+        {
+            try
+            {
+                Context context = Application.Context;
+                Java.IO.File[] dirs = context.GetExternalFilesDirs(null);
+                string sdCardPath = null;
+                foreach (Java.IO.File folder in dirs)
+                {
+                    bool isRemovable = Android.OS.Environment.InvokeIsExternalStorageRemovable(folder);
+                    bool isEmulated = Android.OS.Environment.InvokeIsExternalStorageEmulated(folder);
+
+                    if (isRemovable && !isEmulated)
+                    {
+                        sdCardPath = folder.Path.Split("/Android")[0];
+                        break;
+                    }
+                }
+                if (sdCardPath != null)
+                {
+                    var filePath = System.IO.Path.Combine(sdCardPath, "tbcorrection.txt");
+                    if (Directory.Exists(sdCardPath))
+                    {
+                        StreamReader sr = new StreamReader(filePath);
+                        string line;
+                        line = sr.ReadLine();
+                        if (line != null)
+                        {
+                            line = line.Trim();
+                            string[] subs = line.Split(",");
+                            if(subs.Length == 3)
+                            {
+                                double[] doubles = Array.ConvertAll(subs, Double.Parse);
+                                Toast.MakeText(Application.Context, "Loaded TB corretion from tbcorrection.txt on SD Card", ToastLength.Long).Show();
+                                return doubles;
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                
+            }
+
+            Toast.MakeText(Application.Context, "Load tbcorrection.txt from SD Card failed.", ToastLength.Long).Show();
+            return null;
         }
 
         void loadFormulaFromFile()
@@ -219,6 +306,7 @@ namespace TempModTest
                 //btnStop.Enabled = true;
                 btnLoadFromEEPROM.Enabled = true;
                 btnSaveToEEPROM.Enabled = true;
+                btnSaveTBCorrection.Enabled = true;
             }
             else
             {
@@ -226,6 +314,7 @@ namespace TempModTest
                 //btnStop.Enabled = true;
                 btnLoadFromEEPROM.Enabled = false;
                 btnSaveToEEPROM.Enabled = false;
+                btnSaveTBCorrection.Enabled = false;
             }
             mOperation = op;
         }
@@ -390,7 +479,20 @@ namespace TempModTest
                 }
                 else
                 {
-                    Toast.MakeText(Application.Context, "Save to EEPROM Failed", ToastLength.Long).Show();
+                    Toast.MakeText(Application.Context, "Save formula to EEPROM Failed", ToastLength.Long).Show();
+                }
+                return;
+            }
+            else if(mOperation == OPERATION.SAVE_TB_CORRECTION)
+            {
+                switchOperation(OPERATION.IDLE);
+                if (data.Length > 0 && data[0] == 0xE1)
+                {
+                    Toast.MakeText(Application.Context, "Saved tb correction to EEPROM", ToastLength.Long).Show();
+                }
+                else
+                {
+                    Toast.MakeText(Application.Context, "Save tb corrrection to EEPROM Failed", ToastLength.Long).Show();
                 }
                 return;
             }

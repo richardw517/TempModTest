@@ -60,11 +60,18 @@
 		android:layout_toRightOf="@+id/loadFromEEPROM"
 		android:text="Save EEPROM" />
 	<Button
-		android:id="@+id/backToDeviceList"
+		android:id="@+id/saveTBCorrection"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_below="@+id/demoTitle"
 		android:layout_toRightOf="@+id/saveToEEPROM"
+		android:text="Save TB Correction" />
+	<Button
+		android:id="@+id/backToDeviceList"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/demoTitle"
+		android:layout_toRightOf="@+id/saveTBCorrection"
 		android:text="Back" />
 	<View
 		android:id="@+id/separator"
