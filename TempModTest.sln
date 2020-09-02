@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.28307.1022
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UsbSerialForAndroid", "UsbSerialForAndroid\UsbSerialForAndroid.csproj", "{A64567BC-548A-4CB7-9F2C-ECE75EE1A868}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TempModTest", "TempModTest\TempModTest.csproj", "{59C7DFF3-4E5E-42D7-BB77-E6C4F4E74512}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TempModTest_Omron", "TempModTest\TempModTest_Omron.csproj", "{59C7DFF3-4E5E-42D7-BB77-E6C4F4E74512}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

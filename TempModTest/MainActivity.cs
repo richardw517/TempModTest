@@ -39,7 +39,7 @@ using Hoho.Android.UsbSerial.Util;
 [assembly: UsesFeature("android.hardware.usb.host")]
 
 
-namespace TempModTest
+namespace TempModTest_Omron
 {
     [Activity(Label = "@string/app_name", MainLauncher = true, Icon = "@drawable/icon")]
     [IntentFilter(new[] { UsbManager.ActionUsbDeviceAttached })]

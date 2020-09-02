@@ -9,9 +9,9 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[assembly: global::Android.Runtime.ResourceDesignerAttribute("TempModTest.Resource", IsApplication=true)]
+[assembly: global::Android.Runtime.ResourceDesignerAttribute("TempModTest_Omron.Resource", IsApplication=true)]
 
-namespace TempModTest
+namespace TempModTest_Omron
 {
 	
 	
@@ -26,8 +26,8 @@ namespace TempModTest
 		
 		public static void UpdateIdValues()
 		{
-			global::Hoho.Android.UsbSerial.Resource.String.ApplicationName = global::TempModTest.Resource.String.ApplicationName;
-			global::Hoho.Android.UsbSerial.Resource.String.Hello = global::TempModTest.Resource.String.Hello;
+			global::Hoho.Android.UsbSerial.Resource.String.ApplicationName = global::TempModTest_Omron.Resource.String.ApplicationName;
+			global::Hoho.Android.UsbSerial.Resource.String.Hello = global::TempModTest_Omron.Resource.String.Hello;
 		}
 		
 		public partial class Attribute

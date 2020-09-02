@@ -32,6 +32,7 @@
 		android:layout_toRightOf="@+id/stop"
 		android:text="Clear" />
 	<Button
+		android:visibility="gone"
 		android:id="@+id/loadFromFile"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
@@ -46,6 +47,7 @@
 		android:layout_toRightOf="@+id/loadFromFile"
 		android:text="Save File" />-->
 	<Button
+		android:visibility="gone"
 		android:id="@+id/loadFromEEPROM"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
@@ -53,6 +55,7 @@
 		android:layout_toRightOf="@+id/loadFromFile"
 		android:text="Load EEPROM" />
 	<Button
+		android:visibility="gone"
 		android:id="@+id/saveToEEPROM"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
@@ -60,6 +63,7 @@
 		android:layout_toRightOf="@+id/loadFromEEPROM"
 		android:text="Save EEPROM" />
 	<Button
+		android:visibility="gone"
 		android:id="@+id/saveTBCorrection"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
@@ -90,7 +94,7 @@
 		android:id="@+id/linearLayout1" >
 		<ScrollView
 			android:id="@+id/demoScroller"
-			android:layout_width="wrap_content"
+			android:layout_width="450dp"
 			android:layout_height="match_parent">
 			<TextView
 				android:id="@+id/consoleText"
@@ -106,7 +110,7 @@
 				android:layout_width="match_parent"
 				android:layout_height="match_parent"
 				android:gravity="center"
-				android:textSize="80sp"
+				android:textSize="50sp"
 				android:typeface="monospace" />
 	</LinearLayout>
 </RelativeLayout>
