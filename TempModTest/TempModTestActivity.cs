@@ -12,6 +12,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Util;
 using Android.Views;
+using Android.Views.InputMethods;
 using Android.Widget;
 
 using Hoho.Android.UsbSerial.Driver;
@@ -46,6 +47,9 @@ namespace TempModTest_Omron
         Button btnClear;
 
         Button btnBackToDeviceList;
+        Button btnSaveTBCorrection;
+
+        EditText editTBOffset;
 
         enum OPERATION
         {
@@ -55,6 +59,7 @@ namespace TempModTest_Omron
             LOADEEPROM,
             SAVEEEPROM,
             SAVE_TB_CORRECTION,
+            SAVE_TB_CORRECTION2,
         };
 
         OPERATION mOperation;
@@ -87,6 +92,14 @@ namespace TempModTest_Omron
             btnStop = FindViewById<Button>(Resource.Id.stop);
             btnClear = FindViewById<Button>(Resource.Id.clear);
             btnBackToDeviceList = FindViewById<Button>(Resource.Id.backToDeviceList);
+            btnSaveTBCorrection = FindViewById<Button>(Resource.Id.saveTBCorrection);
+            editTBOffset = FindViewById<EditText>(Resource.Id.editTBOffset);
+
+            editTBOffset.FocusChange += delegate
+            {
+                InputMethodManager inputManager = (InputMethodManager)GetSystemService(Context.InputMethodService);
+                inputManager.HideSoftInputFromWindow(editTBOffset.WindowToken, HideSoftInputFlags.None);
+            };
 
             btnStart.Click += delegate
             {
@@ -111,6 +124,30 @@ namespace TempModTest_Omron
                 var intent = new Intent(this, typeof(MainActivity));
                 StartActivity(intent);
             };
+
+            btnSaveTBCorrection.Click += delegate
+            {
+                double val = Double.Parse(editTBOffset.Text);
+                if(val > 12.7 || val < -12.8)
+                {
+                    Toast.MakeText(Application.Context, "TB Offset over range(-12.8 to 12.7)", ToastLength.Long).Show();
+                    return;
+                }                
+                
+                byte[] tbdata = new byte[6];
+                tbdata[0] = 0xE1;
+                tbdata[1] = 0x01;
+                tbdata[2] = 0xB3;
+                tbdata[3] = 0x00;
+                tbdata[4] = 0x01;
+                tbdata[5] = (byte)(int)(val * 10);
+
+                if (serialIoManager.IsOpen)
+                {
+                    switchOperation(OPERATION.SAVE_TB_CORRECTION);
+                    port.Write(tbdata, WRITE_WAIT_MILLIS);
+                }
+            };
         }
 
         void switchOperation(OPERATION op)
@@ -119,11 +156,13 @@ namespace TempModTest_Omron
             {
                 btnStart.Enabled = true;
                 //btnStop.Enabled = true;
+                btnSaveTBCorrection.Enabled = true;
             }
             else
             {
                 btnStart.Enabled = false;
                 //btnStop.Enabled = true;
+                btnSaveTBCorrection.Enabled = false;
             }
             mOperation = op;
         }
@@ -244,22 +283,51 @@ namespace TempModTest_Omron
 
         void UpdateReceivedData(byte[] data)
         {
-            //handle read data
-            if (data.Length < 2)
+            if (mOperation == OPERATION.SAVE_TB_CORRECTION)
             {
-                return;
+                byte[] tbdata = new byte[7];
+                tbdata[0] = 0xE1;
+                tbdata[1] = 0x01;
+                tbdata[2] = 0xB3;
+                tbdata[3] = 0x00;
+                tbdata[4] = 0x01;
+                tbdata[5] = 0xAA;
+                tbdata[6] = 0x55;
+
+                if (serialIoManager.IsOpen)
+                {
+                    switchOperation(OPERATION.SAVE_TB_CORRECTION2);
+                    port.Write(tbdata, WRITE_WAIT_MILLIS);
+                }
+                else
+                {
+                    Toast.MakeText(Application.Context, "Device disconnected", ToastLength.Long).Show();
+                    switchOperation(OPERATION.IDLE);
+                }
             }
-            if (data[0] == 0xaa && data[1] == 0x23)
+            else if (mOperation == OPERATION.SAVE_TB_CORRECTION2)
             {
-                if(data[2] == 0xff && data[3] == 0xff)
+                Toast.MakeText(Application.Context, "TB Offset written to EEPROM", ToastLength.Long).Show();
+                switchOperation(OPERATION.IDLE);
+            }
+            else if (mOperation == OPERATION.READ)
+            { 
+                //handle read data
+                if (data.Length < 2)
                 {
                     return;
                 }
-                processFrame(data);
+                if (data[0] == 0xaa && data[1] == 0x23)
+                {
+                    if (data[2] == 0xff && data[3] == 0xff)
+                    {
+                        return;
+                    }
+                    processFrame(data);
+                }
             }
             
             return;
-
         }
 
         void processFrame(byte[] data)

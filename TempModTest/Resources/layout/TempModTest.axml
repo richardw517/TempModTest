@@ -2,7 +2,9 @@
 <RelativeLayout
 	xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="match_parent"
-	android:layout_height="match_parent">
+	android:layout_height="match_parent"
+	android:focusableInTouchMode="true"
+	android:focusable="true">
 	<TextView
 		android:id="@+id/demoTitle"
 		android:layout_width="match_parent"
@@ -62,13 +64,21 @@
 		android:layout_below="@+id/demoTitle"
 		android:layout_toRightOf="@+id/loadFromEEPROM"
 		android:text="Save EEPROM" />
+	<EditText
+		android:hint="TB Offset"
+		android:inputType="numberDecimal|numberSigned"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/demoTitle"
+		android:layout_toRightOf="@id/loadFromEEPROM"
+		android:text="0.0"
+		android:id="@+id/editTBOffset" />
 	<Button
-		android:visibility="gone"
 		android:id="@+id/saveTBCorrection"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_below="@+id/demoTitle"
-		android:layout_toRightOf="@+id/saveToEEPROM"
+		android:layout_toRightOf="@+id/editTBOffset"
 		android:text="Save TB Correction" />
 	<Button
 		android:id="@+id/backToDeviceList"

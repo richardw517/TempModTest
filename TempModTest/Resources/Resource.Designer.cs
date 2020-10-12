@@ -71,8 +71,8 @@ namespace TempModTest_Omron
 			// aapt resource value: 0x7f060006
 			public const int Init42 = 2131099654;
 			
-			// aapt resource value: 0x7f060013
-			public const int backToDeviceList = 2131099667;
+			// aapt resource value: 0x7f060014
+			public const int backToDeviceList = 2131099668;
 			
 			// aapt resource value: 0x7f06000e
 			public const int clear = 2131099662;
@@ -89,8 +89,11 @@ namespace TempModTest_Omron
 			// aapt resource value: 0x7f060004
 			public const int deviceList = 2131099652;
 			
-			// aapt resource value: 0x7f060014
-			public const int linearLayout1 = 2131099668;
+			// aapt resource value: 0x7f060012
+			public const int editTBOffset = 2131099666;
+			
+			// aapt resource value: 0x7f060015
+			public const int linearLayout1 = 2131099669;
 			
 			// aapt resource value: 0x7f060010
 			public const int loadFromEEPROM = 2131099664;
@@ -104,8 +107,8 @@ namespace TempModTest_Omron
 			// aapt resource value: 0x7f060000
 			public const int progressBarTitle = 2131099648;
 			
-			// aapt resource value: 0x7f060012
-			public const int saveTBCorrection = 2131099666;
+			// aapt resource value: 0x7f060013
+			public const int saveTBCorrection = 2131099667;
 			
 			// aapt resource value: 0x7f060011
 			public const int saveToEEPROM = 2131099665;
@@ -125,8 +128,8 @@ namespace TempModTest_Omron
 			// aapt resource value: 0x7f060008
 			public const int temperature = 2131099656;
 			
-			// aapt resource value: 0x7f060015
-			public const int tvLatest = 2131099669;
+			// aapt resource value: 0x7f060016
+			public const int tvLatest = 2131099670;
 			
 			static Id()
 			{
