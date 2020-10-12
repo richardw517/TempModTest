@@ -20,7 +20,7 @@ using Hoho.Android.UsbSerial.Extensions;
 using Hoho.Android.UsbSerial.Util;
 
 
-namespace TempModTest_Omron
+namespace TempModTest_MLX906
 {
     [Activity(Label = "@string/app_name", LaunchMode = LaunchMode.SingleTop)]
     public class TempModTestActivity : Activity
