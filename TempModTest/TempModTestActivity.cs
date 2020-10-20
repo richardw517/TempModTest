@@ -35,8 +35,9 @@ namespace TempModTest_MLX906
         const short LEN_TB_CORR = 8;
 
         UsbSerialPort port;
-
         UsbManager usbManager;
+        MLX906 mlx906;
+
         TextView titleTextView;
         TextView dumpTextView;
         ScrollView scrollView;
@@ -47,19 +48,12 @@ namespace TempModTest_MLX906
         Button btnClear;
 
         Button btnBackToDeviceList;
-        Button btnSaveTBCorrection;
-
-        EditText editTBOffset;
 
         enum OPERATION
         {
             IDLE,
             INIT,
             READ,
-            LOADEEPROM,
-            SAVEEEPROM,
-            SAVE_TB_CORRECTION,
-            SAVE_TB_CORRECTION2,
         };
 
         OPERATION mOperation;
@@ -92,15 +86,7 @@ namespace TempModTest_MLX906
             btnStop = FindViewById<Button>(Resource.Id.stop);
             btnClear = FindViewById<Button>(Resource.Id.clear);
             btnBackToDeviceList = FindViewById<Button>(Resource.Id.backToDeviceList);
-            btnSaveTBCorrection = FindViewById<Button>(Resource.Id.saveTBCorrection);
-            editTBOffset = FindViewById<EditText>(Resource.Id.editTBOffset);
-
-            editTBOffset.FocusChange += delegate
-            {
-                InputMethodManager inputManager = (InputMethodManager)GetSystemService(Context.InputMethodService);
-                inputManager.HideSoftInputFromWindow(editTBOffset.WindowToken, HideSoftInputFlags.None);
-            };
-
+            
             btnStart.Click += delegate
             {
                 switchOperation(OPERATION.READ);
@@ -110,6 +96,14 @@ namespace TempModTest_MLX906
             btnStop.Click += delegate
             {
                 timer.Stop();
+                try
+                {
+                    mlx906.StopRead();
+                }
+                catch (Exception)
+                {
+
+                }
                 switchOperation(OPERATION.IDLE);
             };
 
@@ -124,30 +118,6 @@ namespace TempModTest_MLX906
                 var intent = new Intent(this, typeof(MainActivity));
                 StartActivity(intent);
             };
-
-            btnSaveTBCorrection.Click += delegate
-            {
-                double val = Double.Parse(editTBOffset.Text);
-                if(val > 12.7 || val < -12.8)
-                {
-                    Toast.MakeText(Application.Context, "TB Offset over range(-12.8 to 12.7)", ToastLength.Long).Show();
-                    return;
-                }                
-                
-                byte[] tbdata = new byte[6];
-                tbdata[0] = 0xE1;
-                tbdata[1] = 0x01;
-                tbdata[2] = 0xB3;
-                tbdata[3] = 0x00;
-                tbdata[4] = 0x01;
-                tbdata[5] = (byte)(int)(val * 10);
-
-                if (serialIoManager.IsOpen)
-                {
-                    switchOperation(OPERATION.SAVE_TB_CORRECTION);
-                    port.Write(tbdata, WRITE_WAIT_MILLIS);
-                }
-            };
         }
 
         void switchOperation(OPERATION op)
@@ -155,23 +125,94 @@ namespace TempModTest_MLX906
             if(op == OPERATION.IDLE)
             {
                 btnStart.Enabled = true;
-                //btnStop.Enabled = true;
-                btnSaveTBCorrection.Enabled = true;
+                btnStop.Enabled = false;
             }
             else
             {
                 btnStart.Enabled = false;
-                //btnStop.Enabled = true;
-                btnSaveTBCorrection.Enabled = false;
+                btnStop.Enabled = true;
             }
             mOperation = op;
         }
 
-        byte[] getdata = new byte[] { 0xad, 0x00, 0x23, 0x14, 0x4c };
-
         private void OnTimerEvent(object sender, System.Timers.ElapsedEventArgs e)
         {
-            WriteData(getdata);
+            //WriteData(getdata);
+            //timer.Stop();
+            try
+            {
+                short[] raw_frame = mlx906.ReadFrame();
+                if (raw_frame != null)
+                {
+                    double[] frame;
+                    double Tamb;
+                    (frame, Tamb) = mlx906.DoCompensation(raw_frame);
+                    frame = frame.Select(v => Math.Round(v, 2)).ToArray();
+                    string max = String.Format("TA={0:0.00}, MAX={1:0.00}", Tamb, frame.Max());
+                    string message = String.Format("{0:HH:mm:ss tt}: {1}\n", DateTime.Now, max);
+                    string joined = String.Format("{0} {1}\n", message, string.Join(", ", frame));
+                    messageCount++;
+
+                    RunOnUiThread(() =>
+                    {
+                        tvLatest.Text = max;
+                        if (messageCount == 200)
+                        {
+                            messageCount = 0;
+                            dumpTextView.Text = "";
+                        }
+                        dumpTextView.Append(message);
+                        scrollView.SmoothScrollTo(0, dumpTextView.Bottom);
+                    });
+                    try
+                    {
+                        Context context = Application.Context;
+                        Java.IO.File[] dirs = context.GetExternalFilesDirs(null);
+                        string sdCardPath = null;
+                        foreach (Java.IO.File folder in dirs)
+                        {
+                            bool isRemovable = Android.OS.Environment.InvokeIsExternalStorageRemovable(folder);
+                            bool isEmulated = Android.OS.Environment.InvokeIsExternalStorageEmulated(folder);
+
+                            if (isRemovable && !isEmulated)
+                            {
+                                sdCardPath = folder.Path.Split("/Android")[0];
+                                break;
+                            }
+                        }
+                        if (sdCardPath != null)
+                        {
+                            var filePath = System.IO.Path.Combine(sdCardPath, "Temperature_Melexis.csv");
+                            if (Directory.Exists(sdCardPath))
+                            {
+                                var fs = new FileStream(filePath, FileMode.Append);
+                                byte[] txt = new UTF8Encoding(true).GetBytes(joined);
+                                fs.Write(txt, 0, txt.Length);
+                                fs.Close();
+                            }
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                //titleTextView.Text = "Error read frame: " + ex.Message;
+                Log.Error(TAG, "Error read frame: + ", ex.Message);
+                try
+                {
+                    mlx906.ClearError();
+                } catch (Exception)
+                {
+
+                }
+                
+            }
+            //timer.Start();
+            
         }
 
         protected override void OnPause()
@@ -187,7 +228,7 @@ namespace TempModTest_MLX906
                 {
                     serialIoManager.Close();
                 }
-                catch (Java.IO.IOException)
+                catch (Exception)
                 {
                     // ignore
                 }
@@ -216,6 +257,7 @@ namespace TempModTest_MLX906
             if (port == null)
             {
                 titleTextView.Text = "No serial device.";
+                mlx906 = null;
                 return;
             }
             Log.Info(TAG, "port=" + port);
@@ -229,28 +271,38 @@ namespace TempModTest_MLX906
                 StopBits = StopBits.One,
                 Parity = Parity.None,
             };
-            serialIoManager.DataReceived += (sender, e) => {
-                RunOnUiThread(() => {
+            serialIoManager.DataReceived += (sender, e) =>
+            {
+                MLX906.pushData(e.Data);
+                //Log.Info(TAG, "DataReceived");
+                /*RunOnUiThread(() => {
                     UpdateReceivedData(e.Data);
-                });
+                });*/
             };
-            serialIoManager.ErrorReceived += (sender, e) => {
-                RunOnUiThread(async () => {
+            serialIoManager.ErrorReceived += (sender, e) =>
+            {
+                RunOnUiThread(async () =>
+                {
                     await Task.Delay(1000);
                     var intent = new Intent(this, typeof(MainActivity));
                     StartActivity(intent);
                 });
             };
 
-            Log.Info(TAG, "Starting IO manager ..");
+            //Log.Info(TAG, "Starting IO manager ..");
+            switchOperation(OPERATION.INIT);
             try
             {
                 serialIoManager.Open(usbManager);
+                mlx906 = new MLX906(port);
+                mlx906.Init();
                 btnStart.PerformClick();
             }
             catch (Exception e)
             {
                 titleTextView.Text = "Error opening device: " + e.Message;
+                switchOperation(OPERATION.IDLE);
+                mlx906 = null;
                 RunOnUiThread(async () => {
                     await Task.Delay(1000);
                     var intent = new Intent(this, typeof(MainActivity));
@@ -258,141 +310,10 @@ namespace TempModTest_MLX906
                 });
                 return;
             }
-        }
 
-        void WriteData(byte[] data)
-        {
-            if (serialIoManager.IsOpen)
-            {
-                try
-                {
-                    port.Write(data, WRITE_WAIT_MILLIS);
-                }
-                catch (Exception e)
-                {
-                    titleTextView.Text = "Error Write Data: " + e.Message;
-                    RunOnUiThread(async () => {
-                        await Task.Delay(1000);
-                        var intent = new Intent(this, typeof(MainActivity));
-                        StartActivity(intent);
-                    });
-                    return;
-                    }
-                }
-        }
-
-        void UpdateReceivedData(byte[] data)
-        {
-            if (mOperation == OPERATION.SAVE_TB_CORRECTION)
-            {
-                byte[] tbdata = new byte[7];
-                tbdata[0] = 0xE1;
-                tbdata[1] = 0x01;
-                tbdata[2] = 0xB3;
-                tbdata[3] = 0x00;
-                tbdata[4] = 0x01;
-                tbdata[5] = 0xAA;
-                tbdata[6] = 0x55;
-
-                if (serialIoManager.IsOpen)
-                {
-                    switchOperation(OPERATION.SAVE_TB_CORRECTION2);
-                    port.Write(tbdata, WRITE_WAIT_MILLIS);
-                }
-                else
-                {
-                    Toast.MakeText(Application.Context, "Device disconnected", ToastLength.Long).Show();
-                    switchOperation(OPERATION.IDLE);
-                }
-            }
-            else if (mOperation == OPERATION.SAVE_TB_CORRECTION2)
-            {
-                Toast.MakeText(Application.Context, "TB Offset written to EEPROM", ToastLength.Long).Show();
-                switchOperation(OPERATION.IDLE);
-            }
-            else if (mOperation == OPERATION.READ)
-            { 
-                //handle read data
-                if (data.Length < 2)
-                {
-                    return;
-                }
-                if (data[0] == 0xaa && data[1] == 0x23)
-                {
-                    if (data[2] == 0xff && data[3] == 0xff)
-                    {
-                        return;
-                    }
-                    processFrame(data);
-                }
-            }
             
-            return;
         }
 
-        void processFrame(byte[] data)
-        {
-            int index = 2;
-            int count = 17;
-            string message = String.Format("{0:HH:mm:ss tt}, ", DateTime.Now);
-            string latestMsg = message;
-
-            for(int i = 0; i < count; ++i, index+=2)
-            {
-                double value = (data[index+1] * 256 + data[index]) / 10.0;
-                message += String.Format("{0:0.00}, ", value);
-                if(i % 4 == 1)
-                {
-                    latestMsg += "\n";
-                }
-                latestMsg += String.Format("{0:0.00}, ", value);
-            }
-            message += "\n";
-            messageCount++;
-
-            if (messageCount == 200)
-            {
-                messageCount = 0;
-                dumpTextView.Text = "";
-            }
-            dumpTextView.Append(message);
-            //scrollView.SmoothScrollTo(0, dumpTextView.Bottom);
-            tvLatest.Text = latestMsg;
-            Log.Info(TAG, message);
-
-            try
-            {
-                Context context = Application.Context;
-                Java.IO.File[] dirs = context.GetExternalFilesDirs(null);
-                string sdCardPath = null;
-                foreach (Java.IO.File folder in dirs)
-                {
-                    bool isRemovable = Android.OS.Environment.InvokeIsExternalStorageRemovable(folder);
-                    bool isEmulated = Android.OS.Environment.InvokeIsExternalStorageEmulated(folder);
-
-                    if (isRemovable && !isEmulated)
-                    {
-                        sdCardPath = folder.Path.Split("/Android")[0];
-                        break;
-                    }
-                }
-                if (sdCardPath != null)
-                {
-                    var filePath = System.IO.Path.Combine(sdCardPath, "Temperature_Omron.csv");
-                    if (Directory.Exists(sdCardPath))
-                    {
-                        var fs = new FileStream(filePath, FileMode.Append);
-                        byte[] txt = new UTF8Encoding(true).GetBytes(message);
-                        fs.Write(txt, 0, txt.Length);
-                        fs.Close();
-                    }
-                }
-            }
-            catch
-            {
-
-            }
-        }
 
         
     }

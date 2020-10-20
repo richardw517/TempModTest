@@ -65,6 +65,7 @@
 		android:layout_toRightOf="@+id/loadFromEEPROM"
 		android:text="Save EEPROM" />
 	<EditText
+		android:visibility="gone"
 		android:hint="TB Offset"
 		android:inputType="numberDecimal|numberSigned"
 		android:layout_width="wrap_content"
@@ -74,6 +75,7 @@
 		android:text="0.0"
 		android:id="@+id/editTBOffset" />
 	<Button
+		android:visibility="gone"
 		android:id="@+id/saveTBCorrection"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"

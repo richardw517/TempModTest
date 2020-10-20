@@ -513,7 +513,12 @@ namespace Hoho.Android.UsbSerial.Driver
                     {
                         0x3001
                     }
-
+                },
+                {
+                    0x03e9, new int[]
+                    {
+                        0x0020
+                    }
                 }
             };
         }

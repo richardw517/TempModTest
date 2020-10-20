@@ -66,10 +66,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IMlxEEPROM.cs" />
     <Compile Include="MainActivity.cs" />
+    <Compile Include="MLX906.cs" />
+    <Compile Include="Mlx90640EEPROM.cs" />
+    <Compile Include="Mlx90641EEPROM.cs" />
+    <Compile Include="ParameterCodesEEPROM.cs" />
     <Compile Include="Resources\Resource.Designer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SerialConsoleActivity.cs" />
+    <Compile Include="StructConverter.cs" />
+    <Compile Include="TCalcParams.cs" />
     <Compile Include="TempModTestActivity.cs" />
   </ItemGroup>
   <ItemGroup>
