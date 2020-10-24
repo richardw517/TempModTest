@@ -301,7 +301,7 @@ namespace Hoho.Android.UsbSerial.Driver
 
                             System.Buffer.BlockCopy(buf.ToByteArray(), 0, dest, 0, dest.Length);
 
-                            Log.Debug(TAG, HexDump.DumpHexString(dest, 0, Math.Min(32, dest.Length)));
+                            //Log.Debug(TAG, HexDump.DumpHexString(dest, 0, Math.Min(32, dest.Length)));
                             return nread;
                         }
                         else

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Android.App;
 using Android.Content;
@@ -34,6 +35,7 @@ namespace TempModTest_MLX906
         const short ADDR_TB_CORR = 440;
         const short LEN_TB_CORR = 8;
 
+        Mutex mut = new Mutex();
         UsbSerialPort port;
         UsbManager usbManager;
         MLX906 mlx906;
@@ -90,6 +92,17 @@ namespace TempModTest_MLX906
             btnStart.Click += delegate
             {
                 switchOperation(OPERATION.READ);
+                try
+                {
+                    this.mut.WaitOne();
+                    mlx906.StartDataAcquisition(4.0);
+                } catch (Exception)
+                {
+
+                } finally
+                {
+                    this.mut.ReleaseMutex();
+                }
                 timer.Start();
             };
 
@@ -98,11 +111,15 @@ namespace TempModTest_MLX906
                 timer.Stop();
                 try
                 {
+                    this.mut.WaitOne();
                     mlx906.StopRead();
                 }
                 catch (Exception)
                 {
 
+                } finally
+                {
+                    this.mut.ReleaseMutex();
                 }
                 switchOperation(OPERATION.IDLE);
             };
@@ -115,6 +132,7 @@ namespace TempModTest_MLX906
 
             btnBackToDeviceList.Click += delegate
             {
+                timer.Stop();
                 var intent = new Intent(this, typeof(MainActivity));
                 StartActivity(intent);
             };
@@ -139,6 +157,7 @@ namespace TempModTest_MLX906
         {
             //WriteData(getdata);
             //timer.Stop();
+            this.mut.WaitOne();
             try
             {
                 short[] raw_frame = mlx906.ReadFrame();
@@ -202,15 +221,16 @@ namespace TempModTest_MLX906
             {
                 //titleTextView.Text = "Error read frame: " + ex.Message;
                 Log.Error(TAG, "Error read frame: + ", ex.Message);
-                try
-                {
-                    mlx906.ClearError();
-                } catch (Exception)
-                {
+                //try
+                //{
+                //    mlx906.ClearError();
+                //} catch (Exception)
+                //{
 
-                }
+                //}
                 
             }
+            this.mut.ReleaseMutex();
             //timer.Start();
             
         }
@@ -220,6 +240,21 @@ namespace TempModTest_MLX906
             Log.Info(TAG, "OnPause");
 
             base.OnPause();
+
+            timer.Stop();
+            try
+            {
+                this.mut.WaitOne();
+                mlx906.StopRead();
+            }
+            catch (Exception)
+            {
+
+            }
+            finally
+            {
+                this.mut.ReleaseMutex();
+            }
 
             if (serialIoManager != null && serialIoManager.IsOpen)
             {
@@ -264,9 +299,11 @@ namespace TempModTest_MLX906
 
             titleTextView.Text = "Serial device: " + port.GetType().Name;
 
+            bool success = port.PurgeHwBuffers(false, false);
+
             serialIoManager = new SerialInputOutputManager(port)
             {
-                BaudRate = 57600,
+                BaudRate = 38400,// 57600,
                 DataBits = 8,
                 StopBits = StopBits.One,
                 Parity = Parity.None,
@@ -293,6 +330,7 @@ namespace TempModTest_MLX906
             switchOperation(OPERATION.INIT);
             try
             {
+                this.mut.WaitOne();
                 serialIoManager.Open(usbManager);
                 mlx906 = new MLX906(port);
                 mlx906.Init();
@@ -308,7 +346,11 @@ namespace TempModTest_MLX906
                     var intent = new Intent(this, typeof(MainActivity));
                     StartActivity(intent);
                 });
-                return;
+                //return;
+            }
+            finally
+            {
+                this.mut.ReleaseMutex();
             }
 
             

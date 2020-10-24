@@ -25,6 +25,7 @@ using Android.Hardware.Usb;
 using Android.Util;
 using System.Threading.Tasks;
 using Hoho.Android.UsbSerial.Driver;
+using System.Linq;
 
 namespace Hoho.Android.UsbSerial.Extensions
 {
@@ -133,7 +134,8 @@ namespace Hoho.Android.UsbSerial.Extensions
             var len = port.Read(buffer, READ_WAIT_MILLIS);
             if (len > 0)
             {
-                Log.Debug(TAG, "Read data len=" + len);
+                //Log.Debug(TAG, "Read data len=" + len);
+                Log.Debug(TAG, "Read data:" + BitConverter.ToString(buffer.Take(10).ToArray()));
 
                 var data = new byte[len];
                 Array.Copy(buffer, data, len);

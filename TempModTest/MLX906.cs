@@ -71,6 +71,8 @@ namespace TempModTest_MLX906
 
         public static void pushData(byte[] buf)
         {
+            Log.Info(TAG, "PushData: " + BitConverter.ToString(buf.Take(10).ToArray()));
+
             lock (dataLock)
             {
                 dataBuf = Combine(dataBuf, buf);
@@ -108,7 +110,7 @@ namespace TempModTest_MLX906
             }
         }
 
-        public MLX906(UsbSerialPort port, byte i2c_addr = 0x33,  double frame_rate = 2.0, double emissivity = 1.0)
+        public MLX906(UsbSerialPort port, byte i2c_addr = 0x33,  double frame_rate = 4.0, double emissivity = 1.0)
         {
             this.port = port;
             this.i2c_addr = i2c_addr;
@@ -122,7 +124,7 @@ namespace TempModTest_MLX906
             }
             this.m_fEmissivity = emissivity;
 
-            this.support_buffer = true;
+            this.support_buffer = false;
             this.frames_buffer = null;
             this.m_lDaqFrameIdx = 0;
 
@@ -802,6 +804,7 @@ namespace TempModTest_MLX906
             byte[] consecutive_read;
             for(int m = 0;  m < 2; ++m)
             {
+                Thread.Sleep(200);
                 (consecutive_read, status) = I2CRead(0x2400, (ushort)this.eeprom.GetEEPROMSize());
                 if (status != 0)
                     throw new Exception("Error during consecutive read of eeprom");
@@ -834,6 +837,7 @@ namespace TempModTest_MLX906
             if (timed_out)
                 throw new Exception("The command timed out while attempting to get HW id");
 
+            this.StopRead();
             this.SetVdd(3.3);
             this.__send_buffered_command(__command_response_pairs_init_sw_i2c);
             this.__send_buffered_command(__command_response_pairs_begin_conversion);
@@ -879,7 +883,7 @@ namespace TempModTest_MLX906
             }
         }
 
-        void StartDataAcquisition(double frame_rate_hz)
+        public void StartDataAcquisition(double frame_rate_hz)
         {
             int wait_us = (int)Math.Ceiling(1000000 / frame_rate_hz);
             byte[] cmd, result;
@@ -984,8 +988,9 @@ namespace TempModTest_MLX906
                 throw new Exception("Command is limited to 253 bytes!");
             byte[] data = Combine(new byte[] { (byte)n }, GetCmdCrc(cmd));
 
-            port.PurgeHwBuffers(true, true);
+            port.PurgeHwBuffers(true, false);
             MLX906.clearData();
+            Log.Info(TAG, "Send: " + BitConverter.ToString(data));
             port.Write(data, WRITE_WAIT_MILLIS);
         }
 
@@ -1043,6 +1048,7 @@ namespace TempModTest_MLX906
                 Log.Error(TAG, "CRC error.");
                 throw new Exception("CRC Error");
             }
+            Log.Info(TAG, "Received: " + BitConverter.ToString(data.Take(10).ToArray()));
             return data;
 
         }
