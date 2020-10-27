@@ -67,15 +67,26 @@ namespace TempModTest_MLX906
 
         static AutoResetEvent dataEvent = new AutoResetEvent(false);
         static byte[] dataBuf = new byte[0];
+        static int dataBufIdx = 0;
         private static readonly object dataLock = new object();
 
         public static void pushData(byte[] buf)
         {
-            Log.Info(TAG, "PushData: " + BitConverter.ToString(buf.Take(10).ToArray()));
+            //Log.Info(TAG, "PushData: " + BitConverter.ToString(buf.Take(10).ToArray()));
 
             lock (dataLock)
             {
-                dataBuf = Combine(dataBuf, buf);
+                if(dataBuf.Length - dataBufIdx == 0)
+                {
+                    dataBuf = buf;
+                    dataBufIdx = 0;
+                }
+                else
+                {
+                    dataBuf = Combine(dataBuf.Skip(dataBufIdx).Take(dataBuf.Length - dataBufIdx).ToArray(), buf);
+                    dataBufIdx = 0;
+                }
+                
             }
 
             dataEvent.Set();
@@ -87,12 +98,13 @@ namespace TempModTest_MLX906
             {
                 lock (dataLock)
                 {
-                    if (dataBuf.Length >= n)
+                    if (dataBuf.Length - dataBufIdx >= n)
                     {
                         byte[] pop = new byte[n];
-                        Array.Copy(dataBuf, 0, pop, 0, n);
-                        int newLength = dataBuf.Length - n;
-                        dataBuf = dataBuf.Skip(n).Take(newLength).ToArray();
+                        Array.Copy(dataBuf, dataBufIdx, pop, 0, n);
+                        dataBufIdx += n;
+                        //int newLength = dataBuf.Length - n;
+                        //dataBuf = dataBuf.Skip(n).Take(newLength).ToArray();
                         return pop;
                     }
                 }
@@ -106,7 +118,8 @@ namespace TempModTest_MLX906
         {
             lock(dataLock)
             {
-                dataBuf = new byte[0]; 
+                dataBuf = new byte[0];
+                dataBufIdx = 0;
             }
         }
 
@@ -1048,7 +1061,7 @@ namespace TempModTest_MLX906
                 Log.Error(TAG, "CRC error.");
                 throw new Exception("CRC Error");
             }
-            Log.Info(TAG, "Received: " + BitConverter.ToString(data.Take(10).ToArray()));
+            //Log.Info(TAG, "Received: " + BitConverter.ToString(data.Take(10).ToArray()));
             return data;
 
         }
