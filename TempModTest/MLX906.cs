@@ -123,7 +123,7 @@ namespace TempModTest_MLX906
             }
         }
 
-        public MLX906(UsbSerialPort port, byte i2c_addr = 0x33,  double frame_rate = 4.0, double emissivity = 1.0)
+        public MLX906(UsbSerialPort port, byte i2c_addr = 0x33,  double frame_rate = 8.0, double emissivity = 1.0)
         {
             this.port = port;
             this.i2c_addr = i2c_addr;
@@ -892,12 +892,13 @@ namespace TempModTest_MLX906
             this.SetVdd(3.3);
             if (this.support_buffer)
             {
-                this.StartDataAcquisition(frame_rate_hz);
+                this.StartDataAcquisition();//frame_rate_hz);
             }
         }
 
-        public void StartDataAcquisition(double frame_rate_hz)
+        public void StartDataAcquisition(/*double frame_rate_hz*/)
         {
+            double frame_rate_hz = this.frame_rate;
             int wait_us = (int)Math.Ceiling(1000000 / frame_rate_hz);
             byte[] cmd, result;
             if(this.sensor_type == 0)

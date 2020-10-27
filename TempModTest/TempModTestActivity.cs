@@ -62,6 +62,8 @@ namespace TempModTest_MLX906
 
         SerialInputOutputManager serialIoManager;
         private System.Timers.Timer timer = null;
+        private bool isBusy = false;
+        private List<double> lastVals = new List<double>();
         int messageCount = 0;
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -75,7 +77,7 @@ namespace TempModTest_MLX906
             timer.Elapsed += OnTimerEvent;
             timer.Enabled = true;
             timer.AutoReset = true;
-            timer.Interval = 250;// 1000;
+            timer.Interval = 150;// 250;// 1000;
             timer.Stop();
 
             usbManager = GetSystemService(Context.UsbService) as UsbManager;
@@ -95,7 +97,7 @@ namespace TempModTest_MLX906
                 try
                 {
                     this.mut.WaitOne();
-                    mlx906.StartDataAcquisition(4.0);
+                    mlx906.StartDataAcquisition();
                 } catch (Exception)
                 {
 
@@ -113,6 +115,7 @@ namespace TempModTest_MLX906
                 {
                     this.mut.WaitOne();
                     mlx906.StopRead();
+                    this.lastVals = new List<double>();
                 }
                 catch (Exception)
                 {
@@ -157,7 +160,12 @@ namespace TempModTest_MLX906
         {
             //WriteData(getdata);
             //timer.Stop();
+            if (isBusy)
+                return;
+
             this.mut.WaitOne();
+            isBusy = true;
+            
             try
             {
                 short[] raw_frame = mlx906.ReadFrame();
@@ -167,14 +175,21 @@ namespace TempModTest_MLX906
                     double Tamb;
                     (frame, Tamb) = mlx906.DoCompensation(raw_frame);
                     frame = frame.Select(v => Math.Round(v, 2)).ToArray();
-                    string max = String.Format("TA={0:0.00}, MAX={1:0.00}", Tamb, frame.Max());
-                    string message = String.Format("{0:HH:mm:ss tt}: {1}\n", DateTime.Now, max);
-                    string joined = String.Format("{0} {1}\n", message, string.Join(", ", frame));
+                    double max = frame.Max();
+
+                    this.lastVals.Add(max);
+                    if (this.lastVals.Count > 4)
+                        this.lastVals.RemoveAt(0);
+
+                    double average = Enumerable.Average(lastVals);
+                    string str = String.Format("TA={0:0.00}, Max={1:0.00}, AvgLast4={2:0.00}", Tamb, max, average);
+                    string message = String.Format("{0:HH:mm:ss tt}: {1}\n", DateTime.Now, str);
+                    //string joined = String.Format("{0} {1}\n", message, string.Join(", ", frame));
                     messageCount++;
 
                     RunOnUiThread(() =>
                     {
-                        tvLatest.Text = max;
+                        tvLatest.Text = str;
                         if (messageCount == 200)
                         {
                             messageCount = 0;
@@ -205,7 +220,7 @@ namespace TempModTest_MLX906
                             if (Directory.Exists(sdCardPath))
                             {
                                 var fs = new FileStream(filePath, FileMode.Append);
-                                byte[] txt = new UTF8Encoding(true).GetBytes(joined);
+                                byte[] txt = new UTF8Encoding(true).GetBytes(message);
                                 fs.Write(txt, 0, txt.Length);
                                 fs.Close();
                             }
@@ -230,6 +245,7 @@ namespace TempModTest_MLX906
                 //}
                 
             }
+            isBusy = false;
             this.mut.ReleaseMutex();
             //timer.Start();
             
@@ -246,6 +262,7 @@ namespace TempModTest_MLX906
             {
                 this.mut.WaitOne();
                 mlx906.StopRead();
+                this.lastVals = new List<double>();
             }
             catch (Exception)
             {
