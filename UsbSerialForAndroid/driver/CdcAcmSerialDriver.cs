@@ -20,6 +20,7 @@
  * Portions of this library are based on Xamarin USB Serial for Android (https://bitbucket.org/lusovu/xamarinusbserial).
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,10 +35,10 @@ using Android.Views;
 using Android.Widget;
 using Hoho.Android.UsbSerial.Extensions;
 using Hoho.Android.UsbSerial.Util;
-using Java.Util;
-using Java.IO;
-using Java.Lang;
-using Java.Nio;
+//using Java.Util;
+//using Java.IO;
+//using Java.Lang;
+using ByteBuffer = Java.Nio.ByteBuffer;//richard: avoid using Java.* as much as possible
 using Math = System.Math;
 
 namespace Hoho.Android.UsbSerial.Driver
@@ -97,7 +98,7 @@ namespace Hoho.Android.UsbSerial.Driver
             {
                 if (mConnection != null)
                 {
-                    throw new IOException("Already open");
+                    throw new /*IO*/Exception("Already open");
                 }
 
                 mConnection = connection;
@@ -154,7 +155,7 @@ namespace Hoho.Android.UsbSerial.Driver
 
                 if (!mConnection.ClaimInterface(mControlInterface, true))
                 {
-                    throw new IOException("Could not claim shared control/data interface.");
+                    throw new /*IO*/Exception("Could not claim shared control/data interface.");
                 }
 
                 int endCount = mControlInterface.EndpointCount;
@@ -162,7 +163,7 @@ namespace Hoho.Android.UsbSerial.Driver
                 if (endCount < 3)
                 {
                     Log.Debug(TAG, "not enough endpoints - need 3. count=" + endCount);
-                    throw new IOException("Insufficient number of endpoints(" + endCount + ")");
+                    throw new /*IO*/Exception("Insufficient number of endpoints(" + endCount + ")");
                 }
 
                 // Analyse endpoints for their properties
@@ -206,7 +207,7 @@ namespace Hoho.Android.UsbSerial.Driver
                         (mWriteEndpoint == null))
                 {
                     Log.Debug(TAG, "Could not establish all endpoints");
-                    throw new IOException("Could not establish all endpoints");
+                    throw new /*IO*/Exception("Could not establish all endpoints");
                 }
             }
 
@@ -220,7 +221,7 @@ namespace Hoho.Android.UsbSerial.Driver
 
                 if (!mConnection.ClaimInterface(mControlInterface, true))
                 {
-                    throw new IOException("Could not claim control interface.");
+                    throw new /*IO*/Exception("Could not claim control interface.");
                 }
 
                 mControlEndpoint = mControlInterface.GetEndpoint(0);
@@ -233,7 +234,7 @@ namespace Hoho.Android.UsbSerial.Driver
 
                 if (!mConnection.ClaimInterface(mDataInterface, true))
                 {
-                    throw new IOException("Could not claim data interface.");
+                    throw new /*IO*/Exception("Could not claim data interface.");
                 }
                 mReadEndpoint = mDataInterface.GetEndpoint(1);
                 Log.Debug(TAG, "Read endpoint direction: " + mReadEndpoint.Direction);
@@ -251,99 +252,145 @@ namespace Hoho.Android.UsbSerial.Driver
             {
                 if (mConnection == null)
                 {
-                    throw new IOException("Already closed");
+                    throw new /*IO*/Exception("Already closed");
                 }
+
+                if(mControlInterface != null)
+                {
+                    mControlInterface.Dispose();
+                    mControlInterface = null;
+                }
+
+                if (mDataInterface != null)
+                {
+                    mDataInterface.Dispose();
+                    mDataInterface = null;
+                }
+
+                if (mControlEndpoint != null)
+                {
+                    mControlEndpoint.Dispose();
+                    mControlEndpoint = null;
+                }
+
+                if (mReadEndpoint != null)
+                {
+                    mReadEndpoint.Dispose();
+                    mReadEndpoint = null;
+                }
+
+                if (mWriteEndpoint != null)
+                {
+                    mWriteEndpoint.Dispose();
+                    mWriteEndpoint = null;
+                } //richard: dispose to avoid GREF leak
+
                 mConnection.Close();
+                mConnection.Dispose();//richard: dispose to avoid GREF leak
                 mConnection = null;
             }
 
             public override int Read(byte[] dest, int timeoutMillis)
             {
-                if (mEnableAsyncReads)
+                ByteBuffer buf = null; //richard: using finally to dispose buf
+                try
                 {
-                    UsbRequest request = new UsbRequest();
-                    try
+                    if (mEnableAsyncReads)
                     {
-                        request.Initialize(mConnection, mReadEndpoint);
-
-                        // CJM: Xamarin bug:  ByteBuffer.Wrap is supposed to be a two way update
-                        // Changes made to one buffer should reflect in the other.  It's not working
-                        // As a work around, I added a new method as an extension that uses JNI to turn
-                        // a new byte[] array.  I then used BlockCopy to copy the bytes back the original array
-                        // see https://forums.xamarin.com/discussion/comment/238396/#Comment_238396
-                        //
-                        // Old work around:
-                        // as a work around, we populate dest with a call to buf.Get()
-                        // see https://bugzilla.xamarin.com/show_bug.cgi?id=20772
-                        // and https://bugzilla.xamarin.com/show_bug.cgi?id=31260
-
-                        ByteBuffer buf = ByteBuffer.Wrap(dest);
-                        if (!request.Queue(buf, dest.Length))
+                        UsbRequest request = new UsbRequest();
+                    
+                        try
                         {
-                            throw new IOException("Error queueing request.");
+                            request.Initialize(mConnection, mReadEndpoint);
+
+                            // CJM: Xamarin bug:  ByteBuffer.Wrap is supposed to be a two way update
+                            // Changes made to one buffer should reflect in the other.  It's not working
+                            // As a work around, I added a new method as an extension that uses JNI to turn
+                            // a new byte[] array.  I then used BlockCopy to copy the bytes back the original array
+                            // see https://forums.xamarin.com/discussion/comment/238396/#Comment_238396
+                            //
+                            // Old work around:
+                            // as a work around, we populate dest with a call to buf.Get()
+                            // see https://bugzilla.xamarin.com/show_bug.cgi?id=20772
+                            // and https://bugzilla.xamarin.com/show_bug.cgi?id=31260
+
+                            /*ByteBuffer*/ buf = ByteBuffer.Wrap(dest);
+                            if (!request.Queue(buf, dest.Length))
+                            {
+                                throw new /*IO*/Exception("Error queueing request.");
+                            }
+
+                            UsbRequest response = mConnection.RequestWait();
+                            if (response == null)
+                            {
+                                throw new /*IO*/Exception("Null response");
+                            }
+
+                            int nread = buf.Position();
+                            if (nread > 0)
+                            {
+                                // CJM: This differs from the Java implementation.  The dest buffer was
+                                // not getting the data back.
+
+                                // 1st work around, no longer used
+                                //buf.Rewind();
+                                //buf.Get(dest, 0, dest.Length);
+
+                                byte[] byteArray = buf.ToByteArray();
+                                System.Buffer.BlockCopy(byteArray/*buf.ToByteArray()*/, 0, dest, 0, dest.Length);
+                                
+                                //Log.Debug(TAG, HexDump.DumpHexString(dest, 0, Math.Min(32, dest.Length)));
+                                return nread;
+                            }
+                            else
+                            {
+                                return 0;
+                            }
                         }
-
-                        UsbRequest response = mConnection.RequestWait();
-                        if (response == null)
+                        finally
                         {
-                            throw new IOException("Null response");
+                            request.Close();
+                            request.Dispose();//richard: dispose request
                         }
+                    }
 
-                        int nread = buf.Position();
-                        if (nread > 0)
+                    int numBytesRead;
+                    lock (mReadBufferLock)
+                    {
+                        int readAmt = Math.Min(dest.Length, mReadBuffer.Length);
+                        numBytesRead = mConnection.BulkTransfer(mReadEndpoint, mReadBuffer, readAmt,
+                                timeoutMillis);
+                        if (numBytesRead < 0)
                         {
-                            // CJM: This differs from the Java implementation.  The dest buffer was
-                            // not getting the data back.
-
-                            // 1st work around, no longer used
-                            //buf.Rewind();
-                            //buf.Get(dest, 0, dest.Length);
-
-                            System.Buffer.BlockCopy(buf.ToByteArray(), 0, dest, 0, dest.Length);
-
-                            //Log.Debug(TAG, HexDump.DumpHexString(dest, 0, Math.Min(32, dest.Length)));
-                            return nread;
-                        }
-                        else
-                        {
+                            // This sucks: we get -1 on timeout, not 0 as preferred.
+                            // We *should* use UsbRequest, except it has a bug/api oversight
+                            // where there is no way to determine the number of bytes read
+                            // in response :\ -- http://b.android.com/28023
+                            if (timeoutMillis == /*Integer*/Int32.MaxValue)
+                            {
+                                // Hack: Special case "~infinite timeout" as an error.
+                                return -1;
+                            }
                             return 0;
                         }
+                        System.Buffer.BlockCopy(mReadBuffer, 0, dest, 0, numBytesRead);
                     }
-                    finally
-                    {
-                        request.Close();
-                    }
-                }
-
-                int numBytesRead;
-                lock (mReadBufferLock)
+                    return numBytesRead;
+                } finally
                 {
-                    int readAmt = Math.Min(dest.Length, mReadBuffer.Length);
-                    numBytesRead = mConnection.BulkTransfer(mReadEndpoint, mReadBuffer, readAmt,
-                            timeoutMillis);
-                    if (numBytesRead < 0)
+                    if(buf != null)
                     {
-                        // This sucks: we get -1 on timeout, not 0 as preferred.
-                        // We *should* use UsbRequest, except it has a bug/api oversight
-                        // where there is no way to determine the number of bytes read
-                        // in response :\ -- http://b.android.com/28023
-                        if (timeoutMillis == Integer.MaxValue)
-                        {
-                            // Hack: Special case "~infinite timeout" as an error.
-                            return -1;
-                        }
-                        return 0;
+                        buf.Dispose();
                     }
-                    System.Buffer.BlockCopy(mReadBuffer, 0, dest, 0, numBytesRead);
                 }
-                return numBytesRead;
+                
             }
 
             public override int Write(byte[] src, int timeoutMillis)
             {
                 // TODO(mikey): Nearly identical to FtdiSerial write. Refactor.
                 int offset = 0;
-
+                
                 while (offset < src.Length)
                 {
                     int writeLength;
@@ -370,7 +417,7 @@ namespace Hoho.Android.UsbSerial.Driver
                     }
                     if (amtWritten <= 0)
                     {
-                        throw new IOException("Error writing " + writeLength
+                        throw new /*IO*/Exception("Error writing " + writeLength
                                 + " bytes at offset " + offset + " length=" + src.Length);
                     }
 
@@ -389,7 +436,7 @@ namespace Hoho.Android.UsbSerial.Driver
                     case StopBits.One: stopBitsByte = 0; break;
                     case StopBits.OnePointFive: stopBitsByte = 1; break;
                     case StopBits.Two: stopBitsByte = 2; break;
-                    default: throw new IllegalArgumentException("Bad value for stopBits: " + stopBits);
+                    default: throw new /*IllegalArgument*/Exception("Bad value for stopBits: " + stopBits);
                 }
 
                 byte parityBitesByte;
@@ -400,7 +447,7 @@ namespace Hoho.Android.UsbSerial.Driver
                     case Parity.Even: parityBitesByte = 2; break;
                     case Parity.Mark: parityBitesByte = 3; break;
                     case Parity.Space: parityBitesByte = 4; break;
-                    default: throw new IllegalArgumentException("Bad value for parity: " + parity);
+                    default: throw new /*IllegalArgument*/Exception("Bad value for parity: " + parity);
                 }
 
                 byte[] msg = {

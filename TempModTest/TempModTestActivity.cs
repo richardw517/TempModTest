@@ -77,7 +77,7 @@ namespace TempModTest_MLX906
             timer.Elapsed += OnTimerEvent;
             timer.Enabled = true;
             timer.AutoReset = true;
-            timer.Interval = 150;// 250;// 1000;
+            timer.Interval = 10;// 250;// 1000;
             timer.Stop();
 
             usbManager = GetSystemService(Context.UsbService) as UsbManager;
@@ -169,7 +169,8 @@ namespace TempModTest_MLX906
             try
             {
                 short[] raw_frame = mlx906.ReadFrame();
-                if (raw_frame != null)
+                //if (raw_frame != null)
+                if(false)
                 {
                     double[] frame;
                     double Tamb;
@@ -213,7 +214,9 @@ namespace TempModTest_MLX906
                                 sdCardPath = folder.Path.Split("/Android")[0];
                                 break;
                             }
+                            folder.Dispose();
                         }
+                        
                         if (sdCardPath != null)
                         {
                             var filePath = System.IO.Path.Combine(sdCardPath, "Temperature_Melexis.csv");
@@ -279,6 +282,7 @@ namespace TempModTest_MLX906
                 try
                 {
                     serialIoManager.Close();
+                    serialIoManager.Dispose();
                 }
                 catch (Exception)
                 {
@@ -297,7 +301,7 @@ namespace TempModTest_MLX906
             int vendorId = portInfo.VendorId;
             int deviceId = portInfo.DeviceId;
             int portNumber = portInfo.PortNumber;
-
+            portInfo.Dispose(); //richard: dispose
             Log.Info(TAG, string.Format("VendorId: {0} DeviceId: {1} PortNumber: {2}", vendorId, deviceId, portNumber));
 
             var drivers = await MainActivity.FindAllDriversAsync(usbManager);

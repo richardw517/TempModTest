@@ -32,8 +32,8 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
-using Java.Lang;
-using Java.Lang.Reflect;
+//using Java.Lang;
+//using Java.Lang.Reflect;//richard: avoid using Java.*
 
 namespace Hoho.Android.UsbSerial.Driver
 {
@@ -58,9 +58,9 @@ namespace Hoho.Android.UsbSerial.Driver
             ProbeTable probeTable = new ProbeTable();
             probeTable.AddDriver(typeof(CdcAcmSerialDriver));
             probeTable.AddDriver(typeof(Cp21xxSerialDriver));
-            probeTable.AddDriver(typeof(FtdiSerialDriver));
-            probeTable.AddDriver(typeof(ProlificSerialDriver));
-            probeTable.AddDriver(typeof(Ch34xSerialDriver));
+            //probeTable.AddDriver(typeof(FtdiSerialDriver));
+            //probeTable.AddDriver(typeof(ProlificSerialDriver));
+            //probeTable.AddDriver(typeof(Ch34xSerialDriver));
             return probeTable;
         }
 
@@ -77,14 +77,23 @@ namespace Hoho.Android.UsbSerial.Driver
         {
             List< IUsbSerialDriver > result = new List<IUsbSerialDriver>();
 
-            foreach (UsbDevice usbDevice in usbManager.DeviceList.Values)
+            var deviceList = usbManager.DeviceList;
+            var values = deviceList.Values;
+            foreach (UsbDevice usbDevice in values)
             {
                 IUsbSerialDriver driver = ProbeDevice(usbDevice);
                 if (driver != null)
                 {
                     result.Add(driver);
                 }
+                else
+                {
+                    usbDevice.Dispose();//richard: dispose unused UsbDevice to avoid GREF leak
+                }
             }
+
+            ((Java.Lang.Object)values).Dispose();
+            ((Java.Lang.Object)deviceList).Dispose();
             return result;
         }
 
@@ -106,8 +115,13 @@ namespace Hoho.Android.UsbSerial.Driver
                 IUsbSerialDriver driver;
                 try
                 {
-                    driver = (IUsbSerialDriver)Activator.CreateInstance(driverClass, new System.Object[] {usbDevice});
-                } catch (NoSuchMethodException e) {
+                    driver = (IUsbSerialDriver)Activator.CreateInstance(driverClass, new System.Object[] { usbDevice });
+                }
+                catch (Exception e)
+                {
+                    throw e;
+                }
+                    /*catch (NoSuchMethodException e) {
                     throw new RuntimeException(e);
                 } catch (IllegalArgumentException e) {
                     throw new RuntimeException(e);
@@ -117,7 +131,7 @@ namespace Hoho.Android.UsbSerial.Driver
                     throw new RuntimeException(e);
                 } catch (InvocationTargetException e) {
                     throw new RuntimeException(e);
-                }
+                }*/
                 return driver;
             }
             return null;

@@ -74,7 +74,7 @@ namespace Hoho.Android.UsbSerial.Extensions
 
             var connection = usbManager.OpenDevice(port.GetDriver().GetDevice());
             if (connection == null)
-                throw new Java.IO.IOException("Failed to open device");
+                throw new /*Java.IO.IO*/Exception("Failed to open device");//richard: avoid using Java.*
             isOpen = true;
 
             buffer = new byte[bufferSize];
@@ -157,7 +157,8 @@ namespace Hoho.Android.UsbSerial.Extensions
             {
                 Close();
             }
-
+            //port.Close();
+            //port.Driver.GetDevice().Dispose();//richard: dispose to avoid GREF leak
             disposed = true;
         }
 

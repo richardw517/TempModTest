@@ -417,7 +417,8 @@ namespace TempModTest_MLX906
 
         List<short[]> ReadFrames()
         {
-            byte[] data = this.SendCommand(Combine(CMD_ReadDAQ, new byte[] { 0 }));
+            byte[] cmd = Combine(CMD_ReadDAQ, new byte[] { 0 });
+            byte[] data = this.SendCommand(cmd);
             if(data[1] != 0)
             {
                 throw new Exception("EVB90640: EVB Frame buffer full");

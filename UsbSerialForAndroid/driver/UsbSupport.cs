@@ -27,7 +27,7 @@ namespace Hoho.Android.UsbSerial.Driver
     /// https://forums.xamarin.com/discussion/comment/197948/#Comment_197948
     /// Filed as https://bugzilla.xamarin.com/show_bug.cgi?id=47663
     /// </summary>
-    public class UsbSupport : Java.Lang.Object
+    public class UsbSupport //: Java.Lang.Object
     {
         public const int UsbClassAppSpec = 254;
         public const int UsbClassAudio = 1;

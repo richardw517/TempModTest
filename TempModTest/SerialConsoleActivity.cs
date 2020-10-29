@@ -119,7 +119,7 @@ namespace TempModTest_MLX906
                 {
                     serialIoManager.Close();
                 }
-                catch (Java.IO.IOException)
+                catch (/*Java.IO.IO*/Exception)
                 {
                     // ignore
                 }
@@ -178,7 +178,7 @@ namespace TempModTest_MLX906
             {
                 serialIoManager.Open(usbManager);
             }
-            catch (Java.IO.IOException e)
+            catch (/*Java.IO.IO*/Exception e)
             {
                 titleTextView.Text = "Error opening device: " + e.Message;
                 return;
