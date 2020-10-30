@@ -66,6 +66,21 @@ namespace TempModTest_MLX906
         private List<double> lastVals = new List<double>();
         int messageCount = 0;
 
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            usbManager.Dispose();
+            titleTextView.Dispose();
+            dumpTextView.Dispose();
+            scrollView.Dispose();
+            tvLatest.Dispose();
+            btnStart.Dispose();
+            btnStop.Dispose();
+            btnClear.Dispose();
+            btnBackToDeviceList.Dispose();
+        }
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             Log.Info(TAG, "OnCreate");
@@ -105,7 +120,9 @@ namespace TempModTest_MLX906
                 {
                     this.mut.ReleaseMutex();
                 }
+                this.lastVals = new List<double>();
                 timer.Start();
+                GC.Collect();
             };
 
             btnStop.Click += delegate
@@ -115,7 +132,6 @@ namespace TempModTest_MLX906
                 {
                     this.mut.WaitOne();
                     mlx906.StopRead();
-                    this.lastVals = new List<double>();
                 }
                 catch (Exception)
                 {
@@ -138,6 +154,7 @@ namespace TempModTest_MLX906
                 timer.Stop();
                 var intent = new Intent(this, typeof(MainActivity));
                 StartActivity(intent);
+                this.Finish();
             };
         }
 
@@ -169,8 +186,7 @@ namespace TempModTest_MLX906
             try
             {
                 short[] raw_frame = mlx906.ReadFrame();
-                //if (raw_frame != null)
-                if(false)
+                if (raw_frame != null)
                 {
                     double[] frame;
                     double Tamb;
@@ -265,7 +281,6 @@ namespace TempModTest_MLX906
             {
                 this.mut.WaitOne();
                 mlx906.StopRead();
-                this.lastVals = new List<double>();
             }
             catch (Exception)
             {
@@ -282,7 +297,6 @@ namespace TempModTest_MLX906
                 try
                 {
                     serialIoManager.Close();
-                    serialIoManager.Dispose();
                 }
                 catch (Exception)
                 {
@@ -301,7 +315,8 @@ namespace TempModTest_MLX906
             int vendorId = portInfo.VendorId;
             int deviceId = portInfo.DeviceId;
             int portNumber = portInfo.PortNumber;
-            portInfo.Dispose(); //richard: dispose
+            portInfo.Dispose(); //richard: avoid GREF leak
+
             Log.Info(TAG, string.Format("VendorId: {0} DeviceId: {1} PortNumber: {2}", vendorId, deviceId, portNumber));
 
             var drivers = await MainActivity.FindAllDriversAsync(usbManager);
@@ -344,6 +359,7 @@ namespace TempModTest_MLX906
                     await Task.Delay(1000);
                     var intent = new Intent(this, typeof(MainActivity));
                     StartActivity(intent);
+                    this.Finish();
                 });
             };
 
@@ -366,6 +382,7 @@ namespace TempModTest_MLX906
                     await Task.Delay(1000);
                     var intent = new Intent(this, typeof(MainActivity));
                     StartActivity(intent);
+                    this.Finish();
                 });
                 //return;
             }

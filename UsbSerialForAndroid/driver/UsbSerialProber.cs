@@ -57,7 +57,7 @@ namespace Hoho.Android.UsbSerial.Driver
         {
             ProbeTable probeTable = new ProbeTable();
             probeTable.AddDriver(typeof(CdcAcmSerialDriver));
-            probeTable.AddDriver(typeof(Cp21xxSerialDriver));
+            //probeTable.AddDriver(typeof(Cp21xxSerialDriver));
             //probeTable.AddDriver(typeof(FtdiSerialDriver));
             //probeTable.AddDriver(typeof(ProlificSerialDriver));
             //probeTable.AddDriver(typeof(Ch34xSerialDriver));
@@ -92,7 +92,7 @@ namespace Hoho.Android.UsbSerial.Driver
                 }
             }
 
-            ((Java.Lang.Object)values).Dispose();
+            ((Java.Lang.Object)values).Dispose(); //richard: avoid GREF leak
             ((Java.Lang.Object)deviceList).Dispose();
             return result;
         }

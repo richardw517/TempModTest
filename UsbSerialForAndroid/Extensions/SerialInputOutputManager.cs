@@ -108,6 +108,7 @@ namespace Hoho.Android.UsbSerial.Extensions
                 finally
                 {
                     port.Close();
+                    port.Driver.Device.Dispose();//richard: avoid GREF leak
                     buffer = null;
                     isOpen = false;
                     Log.Info(TAG, "Task Ended!");
@@ -157,8 +158,6 @@ namespace Hoho.Android.UsbSerial.Extensions
             {
                 Close();
             }
-            //port.Close();
-            //port.Driver.GetDevice().Dispose();//richard: dispose to avoid GREF leak
             disposed = true;
         }
 
