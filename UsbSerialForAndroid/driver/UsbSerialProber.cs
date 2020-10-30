@@ -32,8 +32,8 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
-//using Java.Lang;
-//using Java.Lang.Reflect;//richard: avoid using Java.*
+using Java.Lang;
+using Java.Lang.Reflect;
 
 namespace Hoho.Android.UsbSerial.Driver
 {
@@ -115,13 +115,8 @@ namespace Hoho.Android.UsbSerial.Driver
                 IUsbSerialDriver driver;
                 try
                 {
-                    driver = (IUsbSerialDriver)Activator.CreateInstance(driverClass, new System.Object[] { usbDevice });
-                }
-                catch (Exception e)
-                {
-                    throw e;
-                }
-                    /*catch (NoSuchMethodException e) {
+                    driver = (IUsbSerialDriver)Activator.CreateInstance(driverClass, new System.Object[] {usbDevice});
+                } catch (NoSuchMethodException e) {
                     throw new RuntimeException(e);
                 } catch (IllegalArgumentException e) {
                     throw new RuntimeException(e);
@@ -131,7 +126,7 @@ namespace Hoho.Android.UsbSerial.Driver
                     throw new RuntimeException(e);
                 } catch (InvocationTargetException e) {
                     throw new RuntimeException(e);
-                }*/
+                }
                 return driver;
             }
             return null;

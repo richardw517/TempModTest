@@ -74,7 +74,7 @@ namespace Hoho.Android.UsbSerial.Extensions
 
             var connection = usbManager.OpenDevice(port.GetDriver().GetDevice());
             if (connection == null)
-                throw new /*Java.IO.IO*/Exception("Failed to open device");//richard: avoid using Java.*
+                throw new Java.IO.IOException("Failed to open device");
             isOpen = true;
 
             buffer = new byte[bufferSize];
@@ -135,8 +135,7 @@ namespace Hoho.Android.UsbSerial.Extensions
             var len = port.Read(buffer, READ_WAIT_MILLIS);
             if (len > 0)
             {
-                //Log.Debug(TAG, "Read data len=" + len);
-                Log.Debug(TAG, "Read data:" + BitConverter.ToString(buffer.Take(10).ToArray()));
+                Log.Debug(TAG, "Read data len=" + len);
 
                 var data = new byte[len];
                 Array.Copy(buffer, data, len);
@@ -158,6 +157,7 @@ namespace Hoho.Android.UsbSerial.Extensions
             {
                 Close();
             }
+
             disposed = true;
         }
 
