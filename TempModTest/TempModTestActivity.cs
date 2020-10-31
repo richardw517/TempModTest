@@ -62,6 +62,25 @@ namespace TempModTest
         private System.Timers.Timer timer = null;
         int messageCount = 0;
 
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            usbManager.Dispose();
+            titleTextView.Dispose();
+            dumpTextView.Dispose();
+            scrollView.Dispose();
+            tvLatest.Dispose();
+
+            btnStart.Dispose();
+            btnStop.Dispose();
+            btnClear.Dispose();
+            btnLoadFromFile.Dispose();
+            btnLoadFromEEPROM.Dispose();
+            btnSaveToEEPROM.Dispose();
+            btnBackToDeviceList.Dispose();
+        }
+
         struct FormulaItem
         {
             public double ta;
@@ -137,6 +156,7 @@ namespace TempModTest
             {
                 switchOperation(OPERATION.READ);
                 timer.Start();
+                GC.Collect();
             };
 
             btnStop.Click += delegate
@@ -176,6 +196,7 @@ namespace TempModTest
             {
                 var intent = new Intent(this, typeof(MainActivity));
                 StartActivity(intent);
+                this.Finish();
             };
         }
 
@@ -376,6 +397,7 @@ namespace TempModTest
             Log.Info(TAG, "OnPause");
 
             base.OnPause();
+            timer.Stop();
 
             if (serialIoManager != null && serialIoManager.IsOpen)
             {

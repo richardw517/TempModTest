@@ -57,10 +57,10 @@ namespace Hoho.Android.UsbSerial.Driver
         {
             ProbeTable probeTable = new ProbeTable();
             probeTable.AddDriver(typeof(CdcAcmSerialDriver));
-            probeTable.AddDriver(typeof(Cp21xxSerialDriver));
-            probeTable.AddDriver(typeof(FtdiSerialDriver));
-            probeTable.AddDriver(typeof(ProlificSerialDriver));
-            probeTable.AddDriver(typeof(Ch34xSerialDriver));
+            //probeTable.AddDriver(typeof(Cp21xxSerialDriver));
+            //probeTable.AddDriver(typeof(FtdiSerialDriver));
+            //probeTable.AddDriver(typeof(ProlificSerialDriver));
+            //probeTable.AddDriver(typeof(Ch34xSerialDriver));
             return probeTable;
         }
 
@@ -77,14 +77,23 @@ namespace Hoho.Android.UsbSerial.Driver
         {
             List< IUsbSerialDriver > result = new List<IUsbSerialDriver>();
 
-            foreach (UsbDevice usbDevice in usbManager.DeviceList.Values)
+            var deviceList = usbManager.DeviceList;
+            var values = deviceList.Values;
+            foreach (UsbDevice usbDevice in values)
             {
                 IUsbSerialDriver driver = ProbeDevice(usbDevice);
                 if (driver != null)
                 {
                     result.Add(driver);
                 }
+                else
+                {
+                    usbDevice.Dispose();//richard: dispose unused UsbDevice to avoid GREF leak
+                }
             }
+
+            ((Java.Lang.Object)values).Dispose(); //richard: avoid GREF leak
+            ((Java.Lang.Object)deviceList).Dispose();
             return result;
         }
 

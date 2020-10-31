@@ -72,6 +72,18 @@ namespace TempModTest
             progressBarTitle = FindViewById<TextView>(Resource.Id.progressBarTitle);
         }
 
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            detachedReceiver.Dispose();
+            adapter.Dispose();
+            usbManager.Dispose();
+            listView.Dispose();
+            progressBar.Dispose();
+            progressBarTitle.Dispose();
+        }
+
         protected override async void OnResume()
         {
             base.OnResume();
@@ -86,6 +98,7 @@ namespace TempModTest
             await PopulateListAsync();
 
             //register the broadcast receivers
+            //detachedReceiver = new UsbDeviceDetachedReceiver(this);
             detachedReceiver = new UsbDeviceDetachedReceiver(this);
             RegisterReceiver(detachedReceiver, new IntentFilter(UsbManager.ActionUsbDeviceDetached));
             RegisterReceiver(detachedReceiver, new IntentFilter(UsbManager.ActionUsbDeviceAttached));
@@ -136,7 +149,7 @@ namespace TempModTest
                 var newIntent = new Intent(this, typeof(TempModTestActivity));
                 newIntent.PutExtra(TempModTestActivity.EXTRA_TAG, new UsbSerialPortInfo(selectedPort));
                 StartActivity(newIntent);
-
+                this.Finish();
 
             }
         }
@@ -163,10 +176,10 @@ namespace TempModTest
             HideProgressBar();
             Log.Info(TAG, "Done refreshing, " + adapter.Count + " entries found.");
 
-            if(adapter.Count > 0)
+            if (adapter.Count > 0)
             {
                 listView.PerformItemClick(listView.GetChildAt(0), 0, listView.GetItemIdAtPosition(0));
-            }
+            }            
         }
 
         void ShowProgressBar()

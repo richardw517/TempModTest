@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="app_name">TempModTest v1.0.6n</string>
+  <string name="app_name">TempModTest v1.0.15n</string>
   <string name="refreshing">Refreshing...</string>
   <string name="sleep">Init41</string>
   <string name="sleep1">Init42</string>
