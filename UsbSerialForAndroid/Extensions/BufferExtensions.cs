@@ -36,7 +36,7 @@ namespace Hoho.Android.UsbSerial.Extensions
     public static class BufferExtensions
     {
         static IntPtr _byteBufferClassRef;
-        static IntPtr _byteBufferGetBii;
+        /*static IntPtr _byteBufferGetBii;
 
         public static ByteBuffer Get(this ByteBuffer buffer, JavaArray<Java.Lang.Byte> dst, int dstOffset, int byteCount)
         {
@@ -54,11 +54,16 @@ namespace Hoho.Android.UsbSerial.Extensions
              new JValue(dstOffset),
              new JValue(byteCount)
          }), JniHandleOwnership.TransferLocalRef);
-        }
+        }*/ //richard: remove
 
         public static byte[] ToByteArray(this ByteBuffer buffer)
         {
-            IntPtr classHandle = JNIEnv.FindClass("java/nio/ByteBuffer");
+            //IntPtr classHandle = JNIEnv.FindClass("java/nio/ByteBuffer");
+            if (_byteBufferClassRef == IntPtr.Zero) //richard: avoid allocate class handle each time and cause GREF leak
+            {
+                _byteBufferClassRef = JNIEnv.FindClass("java/nio/ByteBuffer");
+            }
+            IntPtr classHandle = _byteBufferClassRef;
             IntPtr methodId = JNIEnv.GetMethodID(classHandle, "array", "()[B");
             IntPtr resultHandle = JNIEnv.CallObjectMethod(buffer.Handle, methodId);
 

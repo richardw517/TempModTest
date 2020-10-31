@@ -53,6 +53,8 @@ namespace Hoho.Android.UsbSerial.Extensions
             VendorId = parcel.ReadInt();
             DeviceId = parcel.ReadInt();
             PortNumber = parcel.ReadInt();
+
+            parcel.Dispose();//richard: avoid GREF leak
         }
 
         public int VendorId { get; set; }

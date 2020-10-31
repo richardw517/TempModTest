@@ -32,7 +32,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
-using Java.Util.Jar;
+//using Java.Util.Jar;
 
 namespace Hoho.Android.UsbSerial.Driver
 {

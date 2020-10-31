@@ -66,6 +66,26 @@ namespace TempModTest
         private System.Timers.Timer timer = null;
         int messageCount = 0;
 
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            usbManager.Dispose();
+            titleTextView.Dispose();
+            dumpTextView.Dispose();
+            scrollView.Dispose();
+            tvLatest.Dispose();
+
+            btnStart.Dispose();
+            btnStop.Dispose();
+            btnClear.Dispose();
+            btnLoadFromFile.Dispose();
+            btnLoadFromEEPROM.Dispose();
+            btnSaveToEEPROM.Dispose();
+            btnBackToDeviceList.Dispose();
+            btnSaveTBCorrection.Dispose();
+        }
+
         protected override void OnCreate(Bundle savedInstanceState)
         {
             Log.Info(TAG, "OnCreate");
@@ -101,6 +121,7 @@ namespace TempModTest
             {
                 switchOperation(OPERATION.READ);
                 timer.Start();
+                GC.Collect();
             };
 
             btnStop.Click += delegate
@@ -139,6 +160,7 @@ namespace TempModTest
             {
                 var intent = new Intent(this, typeof(MainActivity));
                 StartActivity(intent);
+                this.Finish();
             };
 
             btnSaveTBCorrection.Click += delegate
@@ -335,6 +357,8 @@ namespace TempModTest
 
             base.OnPause();
 
+			timer.Stop();
+
             if (serialIoManager != null && serialIoManager.IsOpen)
             {
                 Log.Info(TAG, "Stopping IO manager ..");
@@ -359,6 +383,7 @@ namespace TempModTest
             int vendorId = portInfo.VendorId;
             int deviceId = portInfo.DeviceId;
             int portNumber = portInfo.PortNumber;
+            portInfo.Dispose(); //richard: avoid GREF leak
 
             Log.Info(TAG, string.Format("VendorId: {0} DeviceId: {1} PortNumber: {2}", vendorId, deviceId, portNumber));
 
@@ -394,6 +419,7 @@ namespace TempModTest
                     await Task.Delay(1000);
                     var intent = new Intent(this, typeof(MainActivity));
                     StartActivity(intent);
+                    this.Finish();
                 });
             };
 
@@ -417,6 +443,7 @@ namespace TempModTest
                     await Task.Delay(1000);
                     var intent = new Intent(this, typeof(MainActivity));
                     StartActivity(intent);
+                    this.Finish();
                 });
                 return;
             }
@@ -437,6 +464,7 @@ namespace TempModTest
                         await Task.Delay(1000);
                         var intent = new Intent(this, typeof(MainActivity));
                         StartActivity(intent);
+                        this.Finish();
                     });
                     return;
                     }

@@ -20,6 +20,7 @@
  * Portions of this library are based on Xamarin USB Serial for Android (https://bitbucket.org/lusovu/xamarinusbserial).
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,7 +35,7 @@ using Android.Views;
 using Android.Widget;
 using Hoho.Android.UsbSerial.Extensions;
 using Hoho.Android.UsbSerial.Util;
-using Java.Util;
+//using Java.Util;
 using Java.IO;
 using Java.Lang;
 using Java.Nio;
@@ -253,7 +254,39 @@ namespace Hoho.Android.UsbSerial.Driver
                 {
                     throw new IOException("Already closed");
                 }
+
+                if(mControlInterface != null)
+                {
+                    mControlInterface.Dispose();
+                    mControlInterface = null;
+                }
+
+                if (mDataInterface != null)
+                {
+                    mDataInterface.Dispose();
+                    mDataInterface = null;
+                }
+
+                if (mControlEndpoint != null)
+                {
+                    mControlEndpoint.Dispose();
+                    mControlEndpoint = null;
+                }
+
+                if (mReadEndpoint != null)
+                {
+                    mReadEndpoint.Dispose();
+                    mReadEndpoint = null;
+                }
+
+                if (mWriteEndpoint != null)
+                {
+                    mWriteEndpoint.Dispose();
+                    mWriteEndpoint = null;
+                } //richard: dispose to avoid GREF leak
+
                 mConnection.Close();
+                mConnection.Dispose();//richard: dispose to avoid GREF leak
                 mConnection = null;
             }
 
@@ -262,6 +295,7 @@ namespace Hoho.Android.UsbSerial.Driver
                 if (mEnableAsyncReads)
                 {
                     UsbRequest request = new UsbRequest();
+                    
                     try
                     {
                         request.Initialize(mConnection, mReadEndpoint);
@@ -298,10 +332,9 @@ namespace Hoho.Android.UsbSerial.Driver
                             // 1st work around, no longer used
                             //buf.Rewind();
                             //buf.Get(dest, 0, dest.Length);
-
                             System.Buffer.BlockCopy(buf.ToByteArray(), 0, dest, 0, dest.Length);
-
-                            Log.Debug(TAG, HexDump.DumpHexString(dest, 0, Math.Min(32, dest.Length)));
+                                
+                            //Log.Debug(TAG, HexDump.DumpHexString(dest, 0, Math.Min(32, dest.Length)));
                             return nread;
                         }
                         else
@@ -312,6 +345,7 @@ namespace Hoho.Android.UsbSerial.Driver
                     finally
                     {
                         request.Close();
+                        request.Dispose();//richard: dispose request
                     }
                 }
 
@@ -343,7 +377,7 @@ namespace Hoho.Android.UsbSerial.Driver
             {
                 // TODO(mikey): Nearly identical to FtdiSerial write. Refactor.
                 int offset = 0;
-
+                
                 while (offset < src.Length)
                 {
                     int writeLength;
@@ -513,7 +547,12 @@ namespace Hoho.Android.UsbSerial.Driver
                     {
                         0x3001
                     }
-
+                },
+                {
+                    0x03e9, new int[]
+                    {
+                        0x0020
+                    }
                 }
             };
         }

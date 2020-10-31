@@ -72,6 +72,18 @@ namespace TempModTest
             progressBarTitle = FindViewById<TextView>(Resource.Id.progressBarTitle);
         }
 
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            detachedReceiver.Dispose();
+            adapter.Dispose();
+            usbManager.Dispose();
+            listView.Dispose();
+            progressBar.Dispose();
+            progressBarTitle.Dispose();
+        }
+
         protected override async void OnResume()
         {
             base.OnResume();
@@ -137,7 +149,7 @@ namespace TempModTest
                 var newIntent = new Intent(this, typeof(TempModTestActivity));
                 newIntent.PutExtra(TempModTestActivity.EXTRA_TAG, new UsbSerialPortInfo(selectedPort));
                 StartActivity(newIntent);
-
+                this.Finish();
 
             }
         }

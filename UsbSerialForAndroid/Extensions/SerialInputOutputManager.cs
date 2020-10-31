@@ -25,6 +25,7 @@ using Android.Hardware.Usb;
 using Android.Util;
 using System.Threading.Tasks;
 using Hoho.Android.UsbSerial.Driver;
+using System.Linq;
 
 namespace Hoho.Android.UsbSerial.Extensions
 {
@@ -107,6 +108,7 @@ namespace Hoho.Android.UsbSerial.Extensions
                 finally
                 {
                     port.Close();
+                    port.Driver.Device.Dispose();//richard: avoid GREF leak
                     buffer = null;
                     isOpen = false;
                     Log.Info(TAG, "Task Ended!");
