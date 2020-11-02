@@ -45,10 +45,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="driver\CdcAcmSerialDriver.cs" />
+    <Compile Include="driver\Ch34xSerialDriver.cs" />
     <Compile Include="driver\CommonUsbSerialPort.cs" />
     <Compile Include="driver\Cp21xxSerialDriver.cs" />
+    <Compile Include="driver\FtdiSerialDriver.cs" />
     <Compile Include="driver\Parity.cs" />
     <Compile Include="driver\ProbeTable.cs" />
+    <Compile Include="driver\ProlificSerialDriver.cs" />
+    <Compile Include="driver\STM32SerialDriver.cs" />
     <Compile Include="driver\UsbId.cs" />
     <Compile Include="driver\UsbSerialDriver.cs" />
     <Compile Include="driver\UsbSerialPort.cs" />
