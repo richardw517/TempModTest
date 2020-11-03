@@ -66,6 +66,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GraphView.cs" />
     <Compile Include="IMlxEEPROM.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="MLX906.cs" />

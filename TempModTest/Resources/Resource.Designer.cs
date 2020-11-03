@@ -92,8 +92,14 @@ namespace TempModTest_MLX906
 			// aapt resource value: 0x7f060012
 			public const int editTBOffset = 2131099666;
 			
+			// aapt resource value: 0x7f060017
+			public const int graphView = 2131099671;
+			
 			// aapt resource value: 0x7f060015
 			public const int linearLayout1 = 2131099669;
+			
+			// aapt resource value: 0x7f060016
+			public const int linearLayout2 = 2131099670;
 			
 			// aapt resource value: 0x7f060010
 			public const int loadFromEEPROM = 2131099664;
@@ -128,8 +134,8 @@ namespace TempModTest_MLX906
 			// aapt resource value: 0x7f060008
 			public const int temperature = 2131099656;
 			
-			// aapt resource value: 0x7f060016
-			public const int tvLatest = 2131099670;
+			// aapt resource value: 0x7f060018
+			public const int tvLatest = 2131099672;
 			
 			static Id()
 			{

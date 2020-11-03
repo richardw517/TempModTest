@@ -123,7 +123,7 @@ namespace TempModTest_MLX906
             }
         }
 
-        public MLX906(UsbSerialPort port, byte i2c_addr = 0x33,  double frame_rate = 8.0, double emissivity = 1.0)
+        public MLX906(UsbSerialPort port, byte i2c_addr = 0x33,  double frame_rate = 4.0, double emissivity = 1.0)
         {
             this.port = port;
             this.i2c_addr = i2c_addr;

@@ -243,6 +243,10 @@ namespace TempModTest_MLX906
                 this.activity = activity;
             }
 
+            ~UsbDeviceDetachedReceiver()
+            {
+                this.Dispose(false);
+            }
             public async override void OnReceive(Context context, Intent intent)
             {
                 var device = intent.GetParcelableExtra(UsbManager.ExtraDevice) as UsbDevice;

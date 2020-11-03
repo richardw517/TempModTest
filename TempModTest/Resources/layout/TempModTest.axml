@@ -116,13 +116,25 @@
 				android:gravity="bottom"
 				android:typeface="monospace" />
 		</ScrollView>
-		<TextView
-				android:id="@+id/tvLatest"
-				android:textIsSelectable="true"
+		<LinearLayout
+			android:orientation="vertical"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			android:layout_below="@id/separator"
+			android:id="@+id/linearLayout2" >
+			<TempModTest_MLX906.GraphView
 				android:layout_width="match_parent"
-				android:layout_height="match_parent"
-				android:gravity="center"
-				android:textSize="50sp"
-				android:typeface="monospace" />
+				android:layout_height="0dp"
+				android:layout_weight="1"
+				android:id="@+id/graphView" />
+			<TextView
+					android:id="@+id/tvLatest"
+					android:textIsSelectable="true"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:gravity="center"
+					android:textSize="35sp"
+					android:typeface="monospace" />
+		</LinearLayout>
 	</LinearLayout>
 </RelativeLayout>

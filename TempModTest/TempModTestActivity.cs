@@ -50,6 +50,7 @@ namespace TempModTest_MLX906
         Button btnClear;
 
         Button btnBackToDeviceList;
+        GraphView graphView;
 
         enum OPERATION
         {
@@ -79,6 +80,7 @@ namespace TempModTest_MLX906
             btnStop.Dispose();
             btnClear.Dispose();
             btnBackToDeviceList.Dispose();
+            graphView.Dispose();
         }
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -92,7 +94,7 @@ namespace TempModTest_MLX906
             timer.Elapsed += OnTimerEvent;
             timer.Enabled = true;
             timer.AutoReset = true;
-            timer.Interval = 10;// 250;// 1000;
+            timer.Interval = 100;// 250;// 1000;
             timer.Stop();
 
             usbManager = GetSystemService(Context.UsbService) as UsbManager;
@@ -105,7 +107,8 @@ namespace TempModTest_MLX906
             btnStop = FindViewById<Button>(Resource.Id.stop);
             btnClear = FindViewById<Button>(Resource.Id.clear);
             btnBackToDeviceList = FindViewById<Button>(Resource.Id.backToDeviceList);
-            
+            graphView = FindViewById<GraphView>(Resource.Id.graphView);
+
             btnStart.Click += delegate
             {
                 switchOperation(OPERATION.READ);
@@ -202,6 +205,9 @@ namespace TempModTest_MLX906
                     string str = String.Format("TA={0:0.00}, Max={1:0.00}, AvgLast4={2:0.00}", Tamb, max, average);
                     string message = String.Format("{0:HH:mm:ss tt}: {1}\n", DateTime.Now, str);
                     //string joined = String.Format("{0} {1}\n", message, string.Join(", ", frame));
+                    //string joined = String.Format("{0}\n{1}\n", string.Join(", ", raw_frame), string.Join(", ", frame));
+
+                    //Log.Info(TAG, String.Format("{0} {1}\n", message, string.Join(", ", frame)));
                     messageCount++;
 
                     RunOnUiThread(() =>
@@ -214,6 +220,8 @@ namespace TempModTest_MLX906
                         }
                         dumpTextView.Append(message);
                         scrollView.SmoothScrollTo(0, dumpTextView.Bottom);
+                        graphView.Data = frame;
+                        graphView.Invalidate();
                     });
                     try
                     {
