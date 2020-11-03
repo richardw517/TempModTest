@@ -16,13 +16,18 @@ namespace TempModTest_MLX906
 {
     class GraphView : View
     {
-        const int ColorLevels = 256;
+        const int ColorLevels = 32;
 
         private Paint[] paints;
+        private Paint paintStroke;
         private Rect rect = new Rect();
 
         private void init()
         {
+            paintStroke = new Paint();
+            paintStroke.Color = Color.Black;
+            paintStroke.SetStyle(Paint.Style.Stroke);
+
             paints = new Paint[ColorLevels];
             byte interval = 256 * 4 / (ColorLevels);
             Color color = Color.Rgb(0, 0, 255);
@@ -206,6 +211,14 @@ namespace TempModTest_MLX906
                         rect.Bottom = y + squareSize;
 
                         canvas.DrawRect(rect, paints[c]);
+                        if (t == maxVal)
+                        {
+                            rect.Top++;
+                            rect.Left++;
+                            rect.Right--;
+                            rect.Bottom--;
+                            canvas.DrawRect(rect, paintStroke);
+                        }
                     }
                 }
             }

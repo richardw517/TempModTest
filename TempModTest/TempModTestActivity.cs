@@ -51,6 +51,7 @@ namespace TempModTest_MLX906
 
         Button btnBackToDeviceList;
         GraphView graphView;
+        EditText editTBOffset;
 
         enum OPERATION
         {
@@ -81,6 +82,7 @@ namespace TempModTest_MLX906
             btnClear.Dispose();
             btnBackToDeviceList.Dispose();
             graphView.Dispose();
+            editTBOffset.Dispose();
         }
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -108,6 +110,13 @@ namespace TempModTest_MLX906
             btnClear = FindViewById<Button>(Resource.Id.clear);
             btnBackToDeviceList = FindViewById<Button>(Resource.Id.backToDeviceList);
             graphView = FindViewById<GraphView>(Resource.Id.graphView);
+            editTBOffset = FindViewById<EditText>(Resource.Id.editTBOffset);
+
+            editTBOffset.FocusChange += delegate
+            {
+                InputMethodManager inputManager = (InputMethodManager)GetSystemService(Context.InputMethodService);
+                inputManager.HideSoftInputFromWindow(editTBOffset.WindowToken, HideSoftInputFlags.None);
+            };
 
             btnStart.Click += delegate
             {
@@ -202,6 +211,12 @@ namespace TempModTest_MLX906
                         this.lastVals.RemoveAt(0);
 
                     double average = Enumerable.Average(lastVals);
+                    try
+                    {
+                        average += Double.Parse(editTBOffset.Text);
+                    }
+                    catch (Exception) { }
+                    
                     string str = String.Format("TA={0:0.00}, Max={1:0.00}, AvgLast4={2:0.00}", Tamb, max, average);
                     string message = String.Format("{0:HH:mm:ss tt}: {1}\n", DateTime.Now, str);
                     //string joined = String.Format("{0} {1}\n", message, string.Join(", ", frame));

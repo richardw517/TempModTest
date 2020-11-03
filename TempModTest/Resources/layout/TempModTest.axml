@@ -65,7 +65,6 @@
 		android:layout_toRightOf="@+id/loadFromEEPROM"
 		android:text="Save EEPROM" />
 	<EditText
-		android:visibility="gone"
 		android:hint="TB Offset"
 		android:inputType="numberDecimal|numberSigned"
 		android:layout_width="wrap_content"
