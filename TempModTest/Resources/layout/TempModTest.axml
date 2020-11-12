@@ -12,7 +12,7 @@
 		android:layout_alignParentTop="true"
 		android:text="@string/app_name"
 		android:textSize="24sp"
-		android:textStyle="bold" />	
+		android:textStyle="bold" />
 	<Button
 		android:id="@+id/start"
 		android:layout_width="wrap_content"
@@ -64,22 +64,64 @@
 		android:layout_below="@+id/demoTitle"
 		android:layout_toRightOf="@+id/loadFromEEPROM"
 		android:text="Save EEPROM" />
+	<TextView
+		android:id="@+id/tvFps"
+		android:textAppearance="?android:attr/textAppearanceMedium"
+		android:layout_marginTop="10sp"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/demoTitle"
+		android:layout_toRightOf="@+id/saveToEEPROM"
+		android:text="FPS:" />
+	<Spinner
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/demoTitle"
+		android:layout_toRightOf="@id/tvFps"
+		android:id="@+id/spinnerFPS" />
+	<TextView
+		android:id="@+id/tvOffset"
+		android:textAppearance="?android:attr/textAppearanceMedium"
+		android:layout_marginTop="10sp"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/demoTitle"
+		android:layout_toRightOf="@+id/spinnerFPS"
+		android:text="Offset:" />
 	<EditText
 		android:hint="TB Offset"
 		android:inputType="numberDecimal|numberSigned"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_below="@+id/demoTitle"
-		android:layout_toRightOf="@id/loadFromEEPROM"
+		android:layout_toRightOf="@id/tvOffset"
 		android:text="0.0"
 		android:id="@+id/editTBOffset" />
+	<TextView
+		android:id="@+id/tvEmissivity"
+		android:textAppearance="?android:attr/textAppearanceMedium"
+		android:layout_marginTop="10sp"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/demoTitle"
+		android:layout_toRightOf="@+id/editTBOffset"
+		android:text="Emissivity:" />
+	<EditText
+		android:hint="@string/emissivity"
+		android:inputType="numberDecimal|numberSigned"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/demoTitle"
+		android:layout_toRightOf="@id/tvEmissivity"
+		android:text="0.98"
+		android:id="@+id/editEmissivity" />
 	<Button
 		android:visibility="gone"
 		android:id="@+id/saveTBCorrection"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_below="@+id/demoTitle"
-		android:layout_toRightOf="@+id/editTBOffset"
+		android:layout_toRightOf="@+id/editEmissivity"
 		android:text="Save TB Correction" />
 	<Button
 		android:id="@+id/backToDeviceList"

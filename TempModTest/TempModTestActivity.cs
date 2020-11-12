@@ -52,6 +52,8 @@ namespace TempModTest_MLX906
         Button btnBackToDeviceList;
         GraphView graphView;
         EditText editTBOffset;
+        Spinner spinnerFps;
+        EditText editEmissivity;
 
         enum OPERATION
         {
@@ -83,6 +85,8 @@ namespace TempModTest_MLX906
             btnBackToDeviceList.Dispose();
             graphView.Dispose();
             editTBOffset.Dispose();
+            spinnerFps.Dispose();
+            editEmissivity.Dispose();
         }
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -111,11 +115,55 @@ namespace TempModTest_MLX906
             btnBackToDeviceList = FindViewById<Button>(Resource.Id.backToDeviceList);
             graphView = FindViewById<GraphView>(Resource.Id.graphView);
             editTBOffset = FindViewById<EditText>(Resource.Id.editTBOffset);
-
             editTBOffset.FocusChange += delegate
             {
                 InputMethodManager inputManager = (InputMethodManager)GetSystemService(Context.InputMethodService);
                 inputManager.HideSoftInputFromWindow(editTBOffset.WindowToken, HideSoftInputFlags.None);
+            };
+            editEmissivity = FindViewById<EditText>(Resource.Id.editEmissivity);
+            editEmissivity.FocusChange += delegate
+            {
+                InputMethodManager inputManager = (InputMethodManager)GetSystemService(Context.InputMethodService);
+                inputManager.HideSoftInputFromWindow(editEmissivity.WindowToken, HideSoftInputFlags.None);
+            };
+            editEmissivity.TextChanged += (sender, e) =>
+            {
+                try
+                {
+                    this.mlx906.m_fEmissivity = Double.Parse(editEmissivity.Text);
+                }
+                catch
+                {
+
+                }
+            };
+
+            spinnerFps = FindViewById<Spinner>(Resource.Id.spinnerFPS);
+            var adapter = ArrayAdapter.CreateFromResource(this, Resource.Array.fps_array, Android.Resource.Layout.SimpleSpinnerDropDownItem);
+            adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
+            spinnerFps.Adapter = adapter;
+            spinnerFps.ItemSelected += delegate(object sender, AdapterView.ItemSelectedEventArgs e)
+            {
+                Spinner spinner = (Spinner)sender;
+
+                    try
+                    {
+                        this.mut.WaitOne();
+                        this.mlx906.StopRead();
+                        this.mlx906.SetFrameRate(Double.Parse(spinner.GetItemAtPosition(e.Position).ToString()));
+                        this.mlx906.StartDataAcquisition();
+                        string toast = string.Format("FPS is {0}", spinner.GetItemAtPosition(e.Position));
+                        Toast.MakeText(this, toast, ToastLength.Long).Show();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                    finally
+                    {
+                        this.mut.ReleaseMutex();
+                    }
+                
+
             };
 
             btnStart.Click += delegate
@@ -205,17 +253,18 @@ namespace TempModTest_MLX906
                     (frame, Tamb) = mlx906.DoCompensation(raw_frame);
                     frame = frame.Select(v => Math.Round(v, 2)).ToArray();
                     double max = frame.Max();
+                    try
+                    {
+                        max += Double.Parse(editTBOffset.Text);
+                    }
+                    catch (Exception) { }
 
                     this.lastVals.Add(max);
                     if (this.lastVals.Count > 4)
                         this.lastVals.RemoveAt(0);
 
                     double average = Enumerable.Average(lastVals);
-                    try
-                    {
-                        average += Double.Parse(editTBOffset.Text);
-                    }
-                    catch (Exception) { }
+
                     
                     string str = String.Format("TA={0:0.00}, Max={1:0.00}, AvgLast4={2:0.00}", Tamb, max, average);
                     string message = String.Format("{0:HH:mm:ss tt}: {1}\n", DateTime.Now, str);
@@ -328,6 +377,19 @@ namespace TempModTest_MLX906
             }
         }
 
+        private int getIndex(Spinner spinner, String myString)
+        {
+            for (int i = 0; i < spinner.Count; i++)
+            {
+                if (spinner.GetItemAtPosition(i).ToString().Equals(myString))
+                {
+                    return i;
+                }
+            }
+
+            return 0;
+        }
+
         protected async override void OnResume()
         {
             Log.Info(TAG, "OnResume");
@@ -394,6 +456,7 @@ namespace TempModTest_MLX906
                 serialIoManager.Open(usbManager);
                 mlx906 = new MLX906(port);
                 mlx906.Init();
+                spinnerFps.SetSelection(getIndex(spinnerFps, "4.0"));
                 btnStart.PerformClick();
             }
             catch (Exception e)

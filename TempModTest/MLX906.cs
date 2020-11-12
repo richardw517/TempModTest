@@ -55,7 +55,9 @@ namespace TempModTest_MLX906
         TCalcParams calc_params;
         int m_lFilterTgcDepth;
         int[][] m_arrLastTgc;
-        double m_fEmissivity;
+        public double m_fEmissivity {
+            set; get;
+        }
         int sensor_type;
 
         bool support_buffer;
@@ -123,7 +125,7 @@ namespace TempModTest_MLX906
             }
         }
 
-        public MLX906(UsbSerialPort port, byte i2c_addr = 0x33,  double frame_rate = 4.0, double emissivity = 1.0)
+        public MLX906(UsbSerialPort port, byte i2c_addr = 0x33,  double frame_rate = 4.0, double emissivity = 0.98)
         {
             this.port = port;
             this.i2c_addr = i2c_addr;
@@ -870,7 +872,7 @@ namespace TempModTest_MLX906
 
         }
 
-        void SetFrameRate(double frame_rate_hz)
+        public void SetFrameRate(double frame_rate_hz)
         {
             (byte[] ctrl_reg_1, byte status) = this.I2CRead(0x800D, 2);
             if (0 != status)

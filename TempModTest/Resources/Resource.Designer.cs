@@ -30,6 +30,22 @@ namespace TempModTest_MLX906
 			global::Hoho.Android.UsbSerial.Resource.String.Hello = global::TempModTest_MLX906.Resource.String.Hello;
 		}
 		
+		public partial class Array
+		{
+			
+			// aapt resource value: 0x7f060000
+			public const int fps_array = 2131099648;
+			
+			static Array()
+			{
+				global::Android.Runtime.ResourceIdManager.UpdateIdValues();
+			}
+			
+			private Array()
+			{
+			}
+		}
+		
 		public partial class Attribute
 		{
 			
@@ -62,80 +78,95 @@ namespace TempModTest_MLX906
 		public partial class Id
 		{
 			
-			// aapt resource value: 0x7f060007
-			public const int Get = 2131099655;
+			// aapt resource value: 0x7f070007
+			public const int Get = 2131165191;
 			
-			// aapt resource value: 0x7f060005
-			public const int Init41 = 2131099653;
+			// aapt resource value: 0x7f070005
+			public const int Init41 = 2131165189;
 			
-			// aapt resource value: 0x7f060006
-			public const int Init42 = 2131099654;
+			// aapt resource value: 0x7f070006
+			public const int Init42 = 2131165190;
 			
-			// aapt resource value: 0x7f060014
-			public const int backToDeviceList = 2131099668;
+			// aapt resource value: 0x7f070019
+			public const int backToDeviceList = 2131165209;
 			
-			// aapt resource value: 0x7f06000e
-			public const int clear = 2131099662;
+			// aapt resource value: 0x7f07000e
+			public const int clear = 2131165198;
 			
-			// aapt resource value: 0x7f06000b
-			public const int consoleText = 2131099659;
+			// aapt resource value: 0x7f07000b
+			public const int consoleText = 2131165195;
 			
-			// aapt resource value: 0x7f06000a
-			public const int demoScroller = 2131099658;
+			// aapt resource value: 0x7f07000a
+			public const int demoScroller = 2131165194;
 			
-			// aapt resource value: 0x7f060001
-			public const int demoTitle = 2131099649;
+			// aapt resource value: 0x7f070001
+			public const int demoTitle = 2131165185;
 			
-			// aapt resource value: 0x7f060004
-			public const int deviceList = 2131099652;
+			// aapt resource value: 0x7f070004
+			public const int deviceList = 2131165188;
 			
-			// aapt resource value: 0x7f060012
-			public const int editTBOffset = 2131099666;
+			// aapt resource value: 0x7f070017
+			public const int editEmissivity = 2131165207;
 			
-			// aapt resource value: 0x7f060017
-			public const int graphView = 2131099671;
+			// aapt resource value: 0x7f070015
+			public const int editTBOffset = 2131165205;
 			
-			// aapt resource value: 0x7f060015
-			public const int linearLayout1 = 2131099669;
+			// aapt resource value: 0x7f07001c
+			public const int graphView = 2131165212;
 			
-			// aapt resource value: 0x7f060016
-			public const int linearLayout2 = 2131099670;
+			// aapt resource value: 0x7f07001a
+			public const int linearLayout1 = 2131165210;
 			
-			// aapt resource value: 0x7f060010
-			public const int loadFromEEPROM = 2131099664;
+			// aapt resource value: 0x7f07001b
+			public const int linearLayout2 = 2131165211;
 			
-			// aapt resource value: 0x7f06000f
-			public const int loadFromFile = 2131099663;
+			// aapt resource value: 0x7f070010
+			public const int loadFromEEPROM = 2131165200;
 			
-			// aapt resource value: 0x7f060002
-			public const int progressBar = 2131099650;
+			// aapt resource value: 0x7f07000f
+			public const int loadFromFile = 2131165199;
 			
-			// aapt resource value: 0x7f060000
-			public const int progressBarTitle = 2131099648;
+			// aapt resource value: 0x7f070002
+			public const int progressBar = 2131165186;
 			
-			// aapt resource value: 0x7f060013
-			public const int saveTBCorrection = 2131099667;
+			// aapt resource value: 0x7f070000
+			public const int progressBarTitle = 2131165184;
 			
-			// aapt resource value: 0x7f060011
-			public const int saveToEEPROM = 2131099665;
+			// aapt resource value: 0x7f070018
+			public const int saveTBCorrection = 2131165208;
 			
-			// aapt resource value: 0x7f060003
-			public const int separator = 2131099651;
+			// aapt resource value: 0x7f070011
+			public const int saveToEEPROM = 2131165201;
 			
-			// aapt resource value: 0x7f060009
-			public const int sleepButton = 2131099657;
+			// aapt resource value: 0x7f070003
+			public const int separator = 2131165187;
 			
-			// aapt resource value: 0x7f06000c
-			public const int start = 2131099660;
+			// aapt resource value: 0x7f070009
+			public const int sleepButton = 2131165193;
 			
-			// aapt resource value: 0x7f06000d
-			public const int stop = 2131099661;
+			// aapt resource value: 0x7f070013
+			public const int spinnerFPS = 2131165203;
 			
-			// aapt resource value: 0x7f060008
-			public const int temperature = 2131099656;
+			// aapt resource value: 0x7f07000c
+			public const int start = 2131165196;
 			
-			// aapt resource value: 0x7f060018
-			public const int tvLatest = 2131099672;
+			// aapt resource value: 0x7f07000d
+			public const int stop = 2131165197;
+			
+			// aapt resource value: 0x7f070008
+			public const int temperature = 2131165192;
+			
+			// aapt resource value: 0x7f070016
+			public const int tvEmissivity = 2131165206;
+			
+			// aapt resource value: 0x7f070012
+			public const int tvFps = 2131165202;
+			
+			// aapt resource value: 0x7f07001d
+			public const int tvLatest = 2131165213;
+			
+			// aapt resource value: 0x7f070014
+			public const int tvOffset = 2131165204;
 			
 			static Id()
 			{
@@ -180,6 +211,15 @@ namespace TempModTest_MLX906
 			
 			// aapt resource value: 0x7f050002
 			public const int app_name = 2131034114;
+			
+			// aapt resource value: 0x7f050009
+			public const int emissivity = 2131034121;
+			
+			// aapt resource value: 0x7f050008
+			public const int fps = 2131034120;
+			
+			// aapt resource value: 0x7f050007
+			public const int offset = 2131034119;
 			
 			// aapt resource value: 0x7f050003
 			public const int refreshing = 2131034115;

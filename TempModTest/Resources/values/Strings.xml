@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="app_name">TempModTest_MLX906 v1.0.15mlx</string>
+  <string name="app_name">TempModTest_MLX906 v1.0.17mlx</string>
   <string name="refreshing">Refreshing...</string>
   <string name="sleep">Init41</string>
   <string name="sleep1">Init42</string>
   <string name="wakeup">Get</string>
+  <string name="offset">Offset</string>
+  <string name="fps">FPS</string>
+  <string-array name="fps_array">
+    <item>2.0</item>
+    <item>4.0</item>
+  </string-array>
+  <string name="emissivity">Emissivity</string>
 </resources>

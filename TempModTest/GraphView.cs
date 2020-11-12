@@ -163,6 +163,7 @@ namespace TempModTest_MLX906
                     xSize = 16;
                     ySize = 12;
                 }
+
                 double minVal = Data.Min();
                 double maxVal = Data.Max();
                 double range = maxVal - minVal;
