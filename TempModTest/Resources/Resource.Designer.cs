@@ -87,8 +87,8 @@ namespace TempModTest_MLX906
 			// aapt resource value: 0x7f070006
 			public const int Init42 = 2131165190;
 			
-			// aapt resource value: 0x7f070019
-			public const int backToDeviceList = 2131165209;
+			// aapt resource value: 0x7f07001a
+			public const int backToDeviceList = 2131165210;
 			
 			// aapt resource value: 0x7f07000e
 			public const int clear = 2131165198;
@@ -111,14 +111,14 @@ namespace TempModTest_MLX906
 			// aapt resource value: 0x7f070015
 			public const int editTBOffset = 2131165205;
 			
-			// aapt resource value: 0x7f07001c
-			public const int graphView = 2131165212;
-			
-			// aapt resource value: 0x7f07001a
-			public const int linearLayout1 = 2131165210;
+			// aapt resource value: 0x7f07001d
+			public const int graphView = 2131165213;
 			
 			// aapt resource value: 0x7f07001b
-			public const int linearLayout2 = 2131165211;
+			public const int linearLayout1 = 2131165211;
+			
+			// aapt resource value: 0x7f07001c
+			public const int linearLayout2 = 2131165212;
 			
 			// aapt resource value: 0x7f070010
 			public const int loadFromEEPROM = 2131165200;
@@ -153,6 +153,9 @@ namespace TempModTest_MLX906
 			// aapt resource value: 0x7f07000d
 			public const int stop = 2131165197;
 			
+			// aapt resource value: 0x7f070019
+			public const int switchReadMode = 2131165209;
+			
 			// aapt resource value: 0x7f070008
 			public const int temperature = 2131165192;
 			
@@ -162,8 +165,8 @@ namespace TempModTest_MLX906
 			// aapt resource value: 0x7f070012
 			public const int tvFps = 2131165202;
 			
-			// aapt resource value: 0x7f07001d
-			public const int tvLatest = 2131165213;
+			// aapt resource value: 0x7f07001e
+			public const int tvLatest = 2131165214;
 			
 			// aapt resource value: 0x7f070014
 			public const int tvOffset = 2131165204;

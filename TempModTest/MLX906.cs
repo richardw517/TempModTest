@@ -385,6 +385,24 @@ namespace TempModTest_MLX906
             return (result_frame, Tamb);
         }
 
+        public void ClearFrames()
+        {
+            this.frames_buffer = null;
+        }
+
+        public short[] ReadCalculatedFrame()
+        {
+            if (this.frames_buffer == null || this.frames_buffer.Count == 0)
+            {
+                this.frames_buffer = this.ReadCalculatedFrames();
+                if (this.frames_buffer == null || this.frames_buffer.Count == 0)
+                    return null;
+            }
+            short[] frame = this.frames_buffer[0];
+            this.frames_buffer.RemoveAt(0);
+            return frame;
+        }
+
         public short[] ReadFrame()
         {
             if (this.frames_buffer == null || this.frames_buffer.Count == 0)
@@ -415,6 +433,37 @@ namespace TempModTest_MLX906
             else
                 cmd = Combine(CMD_StartDAQ_90641, StructConverter.Pack(new object[] { this.i2c_addr, wait_us }));
             this.SendCommand(cmd);
+        }
+
+        List<short[]> ReadCalculatedFrames()
+        {
+            byte[] data = this.SendCommand(new byte[] { 0xB9 });
+            if (data[1] != 0)
+            {
+                throw new Exception("ReadCalculatedFrames failed");
+            }
+            List<short[]> frames = null;
+            int received_data_len = data.Length - 2;
+            int frame_length = this.sensor_type == 0 ? 32 * 24 * 2 + 2 : 16 * 12 * 2 + 2;
+            if (received_data_len >= frame_length)
+            {
+                if (received_data_len % frame_length != 0)
+                    throw new Exception("Invalid data length from Calculated Frames");
+                frames = new List<short[]>();
+                for (int i = 0; i < received_data_len / frame_length; ++i)
+                {
+                    //this.m_lDaqFrameIdx += 1;
+                    int frame_data_start = 2 + i * frame_length;
+                    int frame_data_end = 2 + (i + 1) * frame_length;
+                    short[] frame = new short[frame_length / 2];
+                    for (int idx = frame_data_start, j = 0; idx < frame_data_end; idx += 2, ++j)
+                    {
+                        frame[j] = (short)((data[idx] << 8) | data[idx + 1]);
+                    }
+                    frames.Add(frame);
+                }
+            }
+            return frames;
         }
 
         List<short[]> ReadFrames()

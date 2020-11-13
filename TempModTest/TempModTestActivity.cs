@@ -54,6 +54,7 @@ namespace TempModTest_MLX906
         EditText editTBOffset;
         Spinner spinnerFps;
         EditText editEmissivity;
+        Switch switchReadMode;
 
         enum OPERATION
         {
@@ -87,6 +88,7 @@ namespace TempModTest_MLX906
             editTBOffset.Dispose();
             spinnerFps.Dispose();
             editEmissivity.Dispose();
+            switchReadMode.Dispose();
         }
 
         protected override void OnCreate(Bundle savedInstanceState)
@@ -165,6 +167,14 @@ namespace TempModTest_MLX906
                 
 
             };
+            switchReadMode = FindViewById<Switch>(Resource.Id.switchReadMode);
+            switchReadMode.Checked = false;
+            switchReadMode.CheckedChange += (sendor, e) =>
+            {
+                this.mut.WaitOne();
+                this.mlx906.ClearFrames();
+                this.mut.ReleaseMutex();
+            };
 
             btnStart.Click += delegate
             {
@@ -242,16 +252,37 @@ namespace TempModTest_MLX906
 
             this.mut.WaitOne();
             isBusy = true;
-            
+
+            bool bFWCalc = switchReadMode.Checked;//true;
             try
             {
-                short[] raw_frame = mlx906.ReadFrame();
+                short[] raw_frame = null;
+                if(bFWCalc)
+                {
+                    raw_frame = mlx906.ReadCalculatedFrame();
+                }
+                else
+                {
+                    raw_frame = mlx906.ReadFrame();
+                }
+                    
                 if (raw_frame != null)
                 {
                     double[] frame;
                     double Tamb;
-                    (frame, Tamb) = mlx906.DoCompensation(raw_frame);
-                    frame = frame.Select(v => Math.Round(v, 2)).ToArray();
+                    if(bFWCalc)
+                    {
+                        int n = raw_frame.Length - 1;
+                        frame = new double[n];
+                        for (int i = 0; i < n; ++i)
+                            frame[i] = raw_frame[i] / 100.0;
+                        Tamb = raw_frame[n] / 100.0;
+                    }else
+                    {
+                        (frame, Tamb) = mlx906.DoCompensation(raw_frame);
+                        frame = frame.Select(v => Math.Round(v, 2)).ToArray();
+                    }
+
                     double max = frame.Max();
                     try
                     {

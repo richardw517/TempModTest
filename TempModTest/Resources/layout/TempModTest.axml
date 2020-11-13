@@ -123,12 +123,23 @@
 		android:layout_below="@+id/demoTitle"
 		android:layout_toRightOf="@+id/editEmissivity"
 		android:text="Save TB Correction" />
+	<Switch
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_below="@+id/demoTitle"
+		android:layout_toRightOf="@id/editEmissivity"
+		android:switchMinWidth="66dp"
+		android:layout_marginTop="10sp"
+		android:text="FW Calc:"
+		android:textAppearance="?android:attr/textAppearanceMedium"
+		
+		android:id="@+id/switchReadMode" />
 	<Button
 		android:id="@+id/backToDeviceList"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_below="@+id/demoTitle"
-		android:layout_toRightOf="@+id/saveTBCorrection"
+		android:layout_toRightOf="@+id/switchReadMode"
 		android:text="Back" />
 	<View
 		android:id="@+id/separator"
@@ -178,4 +189,5 @@
 					android:typeface="monospace" />
 		</LinearLayout>
 	</LinearLayout>
+	
 </RelativeLayout>
